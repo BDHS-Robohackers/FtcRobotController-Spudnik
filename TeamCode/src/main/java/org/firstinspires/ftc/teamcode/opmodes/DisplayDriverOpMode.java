@@ -54,27 +54,33 @@ public class DisplayDriverOpMode extends CommandOpMode {
 
         assert driveMotors != null;
         driveSubsystem = new DriveSubsystem(driveMotors);
-        displayArmSubsystem = new DisplayArmSubsystem(
-                hardwareMap.get(DcMotor.class, "arm1"),
-                hardwareMap.get(DcMotor.class, "arm2"));
+
+        boolean enableArm = true;
+
+        if (enableArm) {
+            displayArmSubsystem = new DisplayArmSubsystem(
+                    hardwareMap.get(DcMotor.class, "arm1"),
+                    hardwareMap.get(DcMotor.class, "arm2"));
+
+            DoubleSupplier arm1Supplier = () -> armerController.getLeftX();
+            DoubleSupplier arm2Supplier = () -> armerController.getRightX();
+            defaultDisplayArmCommand = new DefaultDisplayArmCommand(displayArmSubsystem, arm1Supplier, arm2Supplier);
+            register(displayArmSubsystem);
+            displayArmSubsystem.setDefaultCommand(defaultDisplayArmCommand);
+        }
 
         dbp.info("Subsystems built.");
         dbp.send(false);
 
         initializeDriveSuppliers();
-        DoubleSupplier arm1Supplier = () -> armerController.getLeftX();
-        DoubleSupplier arm2Supplier = () -> armerController.getRightX();
 
         // Initialize commands for the subsystems
 
         driveCommand = new DefaultDrive(driveSubsystem, forwardBack, leftRight, rotation);
-        defaultDisplayArmCommand = new DefaultDisplayArmCommand(displayArmSubsystem, arm1Supplier, arm2Supplier);
 
         register(driveSubsystem);
-        register(displayArmSubsystem);
 
         driveSubsystem.setDefaultCommand(driveCommand);
-        displayArmSubsystem.setDefaultCommand(defaultDisplayArmCommand);
 
         dbp.info("Subsystems registered.");
         dbp.send(false);
