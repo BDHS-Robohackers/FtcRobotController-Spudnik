@@ -55,7 +55,7 @@ public class DisplayDriverOpMode extends CommandOpMode {
         assert driveMotors != null;
         driveSubsystem = new DriveSubsystem(driveMotors);
 
-        boolean enableArm = true;
+        boolean enableArm = false;
 
         if (enableArm) {
             displayArmSubsystem = new DisplayArmSubsystem(
@@ -92,7 +92,7 @@ public class DisplayDriverOpMode extends CommandOpMode {
     }
 
     private void initializeDriveSuppliers() {
-        slowdownMultiplier = () -> 1d / (driverController.getButton(slowdownButton) ? 2d : 1d);
+        slowdownMultiplier = () -> 1d / (driverController.getButton(slowdownButton) ? 1d : 2d);
         rotation = () -> driverController.getRightX() * slowdownMultiplier.getAsDouble();
 
         forwardBack = () -> {
