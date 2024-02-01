@@ -52,5 +52,6 @@ public class CompTrajectoryGenerator {
             default:
                 break;
         }
+        return null;
     }
 }

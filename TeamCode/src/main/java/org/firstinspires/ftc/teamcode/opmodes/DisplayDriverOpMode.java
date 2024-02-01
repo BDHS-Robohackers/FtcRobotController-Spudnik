@@ -44,7 +44,7 @@ public class DisplayDriverOpMode extends CommandOpMode {
     @Override
     public void initialize() {
         driverController = new GamepadEx(gamepad1);
-        armerController = new GamepadEx(gamepad2);
+        //armerController = new GamepadEx(gamepad2);
 
         dbp.createNewTelePacket();
         dbp.info("Initializing drive command op mode...");
@@ -94,10 +94,9 @@ public class DisplayDriverOpMode extends CommandOpMode {
     private void initializeDriveSuppliers() {
         slowdownMultiplier = () -> 1d / (driverController.getButton(slowdownButton) ? 1d : 2d);
         rotation = () -> {
-
-            return slowdownMultiplier.getAsDouble() *
-                    (driverController.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - driverController.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER));
-
+            /*return slowdownMultiplier.getAsDouble() *
+                    (driverController.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - driverController.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER));*/
+            return gamepad1.right_stick_x * slowdownMultiplier.getAsDouble();
             //(driverController.getRightX() * slowdownMultiplier.getAsDouble());
         };
 
