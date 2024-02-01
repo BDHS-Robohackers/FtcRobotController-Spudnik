@@ -92,7 +92,7 @@ public class DisplayDriverOpMode extends CommandOpMode {
     }
 
     private void initializeDriveSuppliers() {
-        slowdownMultiplier = () -> 1d / (driverController.getButton(slowdownButton) ? 1d : 2d);
+        slowdownMultiplier = () -> 1d / ((driverController.getButton(GamepadKeys.Button.LEFT_BUMPER) || driverController.getButton(GamepadKeys.Button.RIGHT_BUMPER)) ? 2d : 1d);
         rotation = () -> {
             /*return slowdownMultiplier.getAsDouble() *
                     (driverController.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - driverController.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER));*/
