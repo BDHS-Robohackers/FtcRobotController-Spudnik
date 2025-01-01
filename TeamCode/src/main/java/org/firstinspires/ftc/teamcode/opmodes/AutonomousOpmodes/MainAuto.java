@@ -1,14 +1,14 @@
 package org.firstinspires.ftc.teamcode.opmodes.AutonomousOpmodes;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.Vector2d;
-import com.acmerobotics.roadrunner.ftc.Actions;
+import com.acmerobotics.roadrunner.SequentialAction;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.teamcode.util.AutoTrajectories;
 
 @Config
 @Autonomous(name = "Main_Auto", group = "Autonomous")
@@ -27,11 +27,14 @@ public class MainAuto extends LinearOpMode {
             if (isStopRequested()) return;
         }
 
+        AutoTrajectories.CompAutoTrajectorySequence compAutoTrajectorySequence = new AutoTrajectories.CompAutoTrajectorySequence(drive, hardwareMap);
+        SequentialAction action = compAutoTrajectorySequence.build();
+
         int startPosition = visionOutputPosition;
         telemetry.addData("Starting Position", startPosition);
         telemetry.update();
         waitForStart();
 
-
+        action.run(new TelemetryPacket());
     }
 }

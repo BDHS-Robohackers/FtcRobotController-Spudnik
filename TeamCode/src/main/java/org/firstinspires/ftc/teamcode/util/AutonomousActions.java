@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.arcrobotics.ftclib.hardware.ServoEx;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -12,9 +11,87 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.EmergencyArmSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.PincherSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.UppieTwoSubsystem;
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
 
 public class AutonomousActions {
     private static final FTCDashboardPackets dbp = new FTCDashboardPackets("AutoActions");
+
+    public static class Uppie {
+        private UppieTwoSubsystem uppieSubsystem;
+
+        public Uppie(HardwareMap map) {
+            try {
+                DcMotorEx armMotor = RobotHardwareInitializer.MotorComponent.ARM.getEx(map);
+            } catch (Exception e) {
+                dbp.error("Error IN UPPIE (AUTO) SYSTEM");
+                dbp.send(true);
+                throw new RuntimeException(e);
+            }
+        }
+
+        public class FullExtend implements Action {
+            private boolean initialized = false;
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                if (!initialized) {
+                    uppieSubsystem.setUppieState(UppieTwoSubsystem.UppieState.MAX);
+                    initialized = true;
+                }
+                return !uppieSubsystem.isIdle();
+            }
+        }
+
+        public Action fullExtend() {
+            return new FullExtend();
+        }
+
+        public class FullRetract implements Action {
+            private boolean initialized = false;
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                if (!initialized) {
+                    uppieSubsystem.setUppieState(UppieTwoSubsystem.UppieState.MIN);
+                    initialized = true;
+                }
+                return !uppieSubsystem.isIdle();
+            }
+        }
+
+        public Action fullRetract() { return new FullRetract(); }
+
+        public class ToRung implements Action {
+            private boolean initialized = false;
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                if (!initialized) {
+                    uppieSubsystem.setUppieState(UppieTwoSubsystem.UppieState.RUNG);
+                    initialized = true;
+                }
+                return !uppieSubsystem.isIdle();
+            }
+        }
+
+        public Action toRung() { return new ToRung(); }
+
+        public class ToAttach implements Action {
+            private boolean initialized = false;
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                if (!initialized) {
+                    uppieSubsystem.setUppieState(UppieTwoSubsystem.UppieState.ATTACH);
+                    initialized = true;
+                }
+                return !uppieSubsystem.isIdle();
+            }
+        }
+
+        public Action toAttach() { return new ToAttach(); }
+    }
 
     @Deprecated
     public static class Pincher {

@@ -1,9 +1,16 @@
-package org.firstinspires.ftc.teamcode.util;
+package org.firstinspires.ftc.teamcode.util.LoggingUtils;
+
+import static org.firstinspires.ftc.teamcode.util.MatchRecorder.MatchLogger.REFLECTIONLESS;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 
 import java.io.IOException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
 
 public class FTCDashboardPackets {
     public static final FtcDashboard DASHBOARD = FtcDashboard.getInstance();
@@ -56,6 +63,12 @@ public class FTCDashboardPackets {
     public FTCDashboardPackets(boolean _useLogging) {
         CONTEXT = "ROOT";
         USE_LOGGING = _useLogging;
+        createNewTelePacket();
+    }
+
+    public FTCDashboardPackets(Object callingClass) {
+        CONTEXT = callingClass.getClass().getName();
+        USE_LOGGING = true;
         createNewTelePacket();
     }
 
@@ -315,6 +328,12 @@ public class FTCDashboardPackets {
             @Override
             public String getPacketMessage() {
                 return "Waiting...";
+            }
+        },
+        INIT {
+            @Override
+            public String getPacketMessage() {
+                return "Initialized...";
             }
         };
 

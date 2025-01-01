@@ -4,12 +4,17 @@ import com.arcrobotics.ftclib.hardware.ServoEx;
 import com.arcrobotics.ftclib.hardware.SimpleServo;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
+
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
 
 import java.util.HashMap;
 
@@ -39,14 +44,12 @@ public class RobotHardwareInitializer {
         LEFT_BACK("bl_drv"),
         RIGHT_BACK("br_drv"),
 
-        LOWER_ARM("low_arm"),
-        HIGHER_ARM("high_arm"),
-        HANG_MOTOR("hang"),
-
-        @Deprecated UPPIES("uppies"), // Used to move the pincher and bucket up and down
-        @Deprecated EXTENDER("extender"), // Used to move in intake system forward and back
-        @Deprecated EXTENDER2("extender2"), // Used to move in intake system forward and back
-        @Deprecated INTAKE("intake"), // Used to pick up blocks
+        @Deprecated LOWER_ARM("low_arm"),
+        @Deprecated HIGHER_ARM("high_arm"),
+        @Deprecated HANG_MOTOR("hang"),
+        VIPER_LEFT("viper_left"),
+        VIPER_RIGHT("viper_right"),
+        ARM("robo_arm"),
         ;
         private final String componentName;
         MotorComponent(String componentName) { this.componentName = componentName; }
@@ -57,12 +60,30 @@ public class RobotHardwareInitializer {
         }
     }
 
+    public enum IMUComponent implements Component<IMU> {
+        IMU("arm_imu");
+
+        private final String componentName;
+        IMUComponent(String componentName) { this.componentName = componentName; }
+
+        @Override
+        public String getComponentName() {
+            return componentName;
+        }
+
+        @Override
+        public com.qualcomm.robotcore.hardware.IMU get(HardwareMap map) throws Exception {
+            return map.get(com.qualcomm.robotcore.hardware.IMU.class, getComponentName());
+        }
+    }
+
     public enum ServoComponent implements Component<Servo> {
-        PINCHER("pincher"),
+        @Deprecated PINCHER("pincher"),
         @Deprecated FINGER_1("finger1"), // left finger
         @Deprecated FINGER_2("finger2"), // right finger
         @Deprecated BUCKET_DUMPER("bucket"), // Used to dump the bucket and return to the collecting position
         @Deprecated INTAKE_TILTER("intake_servo"), // Used to tilt the intake system toward the bucket at to the ground
+        INTAKE("intake")
         ;
         private final String componentName;
         ServoComponent(String componentName) { this.componentName = componentName; }
@@ -77,7 +98,7 @@ public class RobotHardwareInitializer {
     }
 
     public enum CRServoComponent implements Component<CRServo> {
-        WRIST("wrist")
+        @Deprecated WRIST("wrist"),
         ;
 
         private final String componentName;
@@ -94,6 +115,30 @@ public class RobotHardwareInitializer {
         EncoderComponent(String componentName) { this.componentName = componentName; }
         @Override public String getComponentName() { return componentName; }
         @Override public DcMotorEx get(HardwareMap map) { return map.get(DcMotorEx.class, getComponentName()); }
+    }
+
+    public enum TouchSensorComponent implements Component<TouchSensor> {
+        ;
+        private final String componentName;
+        TouchSensorComponent(String componentName) { this.componentName = componentName; }
+        @Override public String getComponentName() { return componentName; }
+        @Override public TouchSensor get(HardwareMap map) { return map.get(TouchSensor.class, getComponentName()); }
+    }
+
+    public enum ColorV3SensorComponent implements Component<ColorSensor> {
+        ;
+        private final String componentName;
+
+        ColorV3SensorComponent(String componentName) { this.componentName = componentName; }
+        @Override
+        public ColorSensor get(HardwareMap map) throws Exception {
+            return map.get(ColorSensor.class, getComponentName());
+        }
+
+        @Override
+        public String getComponentName() {
+            return componentName;
+        }
     }
 
     public enum DistanceSensorComponent implements Component<DistanceSensor> {

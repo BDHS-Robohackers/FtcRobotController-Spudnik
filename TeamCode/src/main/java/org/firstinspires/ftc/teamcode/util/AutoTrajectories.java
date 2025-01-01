@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.util;
 
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Rotation2d;
 import com.acmerobotics.roadrunner.SequentialAction;
@@ -9,6 +10,7 @@ import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.arcrobotics.ftclib.command.SequentialCommandGroup;
 import com.arcrobotics.ftclib.command.WaitCommand;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.commands.DriveCommand;
@@ -24,6 +26,7 @@ public class AutoTrajectories {
         public static final Pose2d INITIAL_POSE = new Pose2d(new Vector2d(5, -65), Math.toRadians(90));
 
         private final MecanumDrive DRIVE;
+        private final AutonomousActions.Uppie UPPIE;
 
         public static TrajectoryActionBuilder START;
         public static TrajectoryActionBuilder TO_RUNG;
@@ -61,6 +64,7 @@ public class AutoTrajectories {
             BLOCK_RIGHT(new Pose2d(new Vector2d(70, -35), Math.toRadians(90))),
             PARK_CORNER(new Pose2d(new Vector2d(43, -65), Math.toRadians(90))),
             PARK_SUB,
+            GRAB_BLOCK,
             PLACE_RUNG,
             WAIT(),
             DROP_SAMPLE(new Pose2d(new Vector2d(43, -65), Math.toRadians(0))),
@@ -94,8 +98,9 @@ public class AutoTrajectories {
             }
         }
 
-        public CompAutoTrajectorySequence(MecanumDrive drive) {
+        public CompAutoTrajectorySequence(MecanumDrive drive, HardwareMap map) {
             DRIVE = drive;
+            UPPIE = new AutonomousActions.Uppie(map);
         }
 
         public SequentialAction build() {
@@ -104,17 +109,49 @@ public class AutoTrajectories {
             for (STATES state : RUN_REEL) {
                 switch (state) {
                     case START:
-                        actions.add(generateStartTrajectory().build());
+                        ParallelAction startAction = new ParallelAction(
+                                generateStartTrajectory().build(),
+                                UPPIE.toRung()
+                        );
+                        actions.add(startAction);
                         break;
                     case WAIT:
                         actions.add(new SleepAction(1.605));
                         break;
-                    case PLACE_RUNG:
-                        actions.add(generateToRungTrajectory(previousState).build());
+                    case TO_RUNG:
+                        ParallelAction toRungAction = new ParallelAction(
+                                generateToRungTrajectory(previousState).build(),
+                                UPPIE.toRung()
+                        );
+                        actions.add(toRungAction);
                         break;
+                    case PLACE_RUNG:
+                        actions.add(UPPIE.toAttach());
+                        break;
+                    case PARK_CORNER:
+                    case DROP_SAMPLE:
                     case TO_CORNER:
                         actions.add(generateToCorner(previousState).build());
                         break;
+                    case DROP:
+                        actions.add(new SleepAction(1.605));
+                        // TODO: Implement Drop action
+                        break;
+                    case GRAB_BLOCK:
+                        actions.add(new SleepAction(1.605));
+                        // TODO: Implement grab block action
+                        break;
+                    case BLOCK_LEFT:
+                        actions.add(generateToBlockLeft(previousState).build());
+                        break;
+                    case BLOCK_MIDDLE:
+                        actions.add(generateToBlockMiddle(previousState).build());
+                        break;
+                    case BLOCK_RIGHT:
+                        actions.add(generateToBlockRight(previousState).build());
+                        break;
+                    case PARK_SUB:
+                        // TODO: Implement Park Submersible
                     case END:
                     default:
                         return new SequentialAction(actions);
@@ -145,6 +182,33 @@ public class AutoTrajectories {
                     .splineToConstantHeading(pos, heading);
 
             return TO_CORNER;
+        }
+
+        private TrajectoryActionBuilder generateToBlockLeft(STATES previousState) {
+            Vector2d pos = STATES.BLOCK_LEFT.END_POSE.position;
+            Rotation2d heading = STATES.BLOCK_LEFT.END_POSE.heading;
+            TO_BLOCK_LEFT = DRIVE.actionBuilder(previousState.get_END_POSE())
+                    .splineToConstantHeading(pos, heading);
+
+            return TO_BLOCK_LEFT;
+        }
+
+        private TrajectoryActionBuilder generateToBlockMiddle(STATES previousState) {
+            Vector2d pos = STATES.BLOCK_MIDDLE.END_POSE.position;
+            Rotation2d heading = STATES.BLOCK_MIDDLE.END_POSE.heading;
+            TO_BLOCK_MIDDLE = DRIVE.actionBuilder(previousState.get_END_POSE())
+                    .splineToConstantHeading(pos, heading);
+
+            return TO_BLOCK_MIDDLE;
+        }
+
+        private TrajectoryActionBuilder generateToBlockRight(STATES previousState) {
+            Vector2d pos = STATES.BLOCK_RIGHT.END_POSE.position;
+            Rotation2d heading = STATES.BLOCK_RIGHT.END_POSE.heading;
+            TO_BLOCK_RIGHT = DRIVE.actionBuilder(previousState.get_END_POSE())
+                    .splineToConstantHeading(pos, heading);
+
+            return TO_BLOCK_RIGHT;
         }
     }
 }
