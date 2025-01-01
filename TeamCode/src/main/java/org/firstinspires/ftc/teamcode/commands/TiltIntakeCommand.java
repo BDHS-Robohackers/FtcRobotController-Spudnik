@@ -4,6 +4,7 @@ import com.arcrobotics.ftclib.command.CommandBase;
 
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 
+@Deprecated
 public class TiltIntakeCommand extends CommandBase {
 
     IntakeSubsystem intakeSubsystem;

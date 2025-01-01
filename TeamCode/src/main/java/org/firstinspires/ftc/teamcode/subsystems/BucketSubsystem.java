@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.arcrobotics.ftclib.command.SubsystemBase;
 import com.arcrobotics.ftclib.hardware.ServoEx;
 
+@Deprecated
 public class BucketSubsystem extends SubsystemBase {
 
     final ServoEx servo;

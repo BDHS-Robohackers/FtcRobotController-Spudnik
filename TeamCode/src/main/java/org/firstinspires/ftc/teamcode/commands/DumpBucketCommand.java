@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.subsystems.BucketSubsystem;
 
 import java.util.Set;
 
+@Deprecated
 public class DumpBucketCommand extends CommandBase {
     private boolean finished = false;
 

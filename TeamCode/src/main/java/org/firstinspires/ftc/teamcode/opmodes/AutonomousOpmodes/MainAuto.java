@@ -32,11 +32,6 @@ public class MainAuto extends LinearOpMode {
         telemetry.update();
         waitForStart();
 
-        TrajectoryActionBuilder red = drive.actionBuilder(initialPose)
-                .waitSeconds(4.605)
-                .strafeTo(new Vector2d(initialPose.position.x, initialPose.position.y+5))
-                .strafeTo(new Vector2d(initialPose.position.x + 5, initialPose.position.y+5));
 
-        Actions.runBlocking(red.build());
     }
 }

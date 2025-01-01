@@ -4,6 +4,7 @@ import com.arcrobotics.ftclib.command.CommandBase;
 
 import org.firstinspires.ftc.teamcode.subsystems.PincherSubsystem;
 
+@Deprecated
 public class MovePincherCommand extends CommandBase {
 
     PincherSubsystem subsystem;

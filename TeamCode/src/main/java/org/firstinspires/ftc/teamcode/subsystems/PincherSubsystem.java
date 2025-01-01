@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.util.MatchRecorder.MatchLogger;
 
 import java.util.Objects;
 
+@Deprecated
 public class PincherSubsystem extends SubsystemBase {
 
     ServoEx finger1, finger2;

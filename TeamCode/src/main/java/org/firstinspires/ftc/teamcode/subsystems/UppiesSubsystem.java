@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.util.FTCDashboardPackets;
 
 import java.util.function.BooleanSupplier;
 
+@Deprecated
 @Config
 public class UppiesSubsystem extends SubsystemBase {
 

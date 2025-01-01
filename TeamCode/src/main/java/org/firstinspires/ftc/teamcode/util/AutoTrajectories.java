@@ -32,6 +32,7 @@ public class AutoTrajectories {
         public static TrajectoryActionBuilder TO_BLOCK_MIDDLE;
         public static TrajectoryActionBuilder TO_BLOCK_RIGHT;
 
+        // Change this to change what the robot does in auto
         private final STATES[] RUN_REEL = {
                 STATES.START,
                 STATES.PLACE_RUNG,
@@ -96,8 +97,6 @@ public class AutoTrajectories {
         public CompAutoTrajectorySequence(MecanumDrive drive) {
             DRIVE = drive;
         }
-
-
 
         public SequentialAction build() {
             ArrayList<Action> actions = new ArrayList<>();
