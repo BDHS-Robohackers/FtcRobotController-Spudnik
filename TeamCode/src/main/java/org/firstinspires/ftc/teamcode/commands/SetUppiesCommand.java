@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.subsystems.UppiesSubsystem;
 
 import java.util.function.BooleanSupplier;
 
+@Deprecated
 public class SetUppiesCommand extends CommandBase {
 
     UppiesSubsystem uppiesSubsystem;

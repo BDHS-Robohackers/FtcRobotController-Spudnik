@@ -6,9 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.util.FTCDashboardPackets;
-
-import java.util.function.BooleanSupplier;
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
 
 @Deprecated
 @Config

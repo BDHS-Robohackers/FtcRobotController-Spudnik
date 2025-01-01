@@ -1,16 +1,14 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.arcrobotics.ftclib.command.Subsystem;
 import com.arcrobotics.ftclib.command.SubsystemBase;
-import com.arcrobotics.ftclib.util.Direction;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.util.FTCDashboardPackets;
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
 import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer;
 
+@Deprecated
 public class HangSubsystem extends SubsystemBase {
 
     final DcMotor extensionMotor;

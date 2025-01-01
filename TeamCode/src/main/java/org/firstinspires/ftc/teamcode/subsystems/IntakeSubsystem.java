@@ -5,8 +5,9 @@ import com.arcrobotics.ftclib.hardware.ServoEx;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import org.firstinspires.ftc.teamcode.util.FTCDashboardPackets;
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
 
+@Deprecated
 public class IntakeSubsystem extends SubsystemBase {
 
     public static final float INTAKE_SPEED = .95f;

@@ -1,15 +1,14 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.arcrobotics.ftclib.command.CommandBase;
 import com.arcrobotics.ftclib.command.SubsystemBase;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.robocol.Command;
 
-import org.firstinspires.ftc.teamcode.util.FTCDashboardPackets;
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
+@Deprecated
 public class ExtendoSystem extends SubsystemBase {
 
     final DcMotorEx motor, reverseMotor;

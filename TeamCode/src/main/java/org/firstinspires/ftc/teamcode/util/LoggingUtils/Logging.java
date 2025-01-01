@@ -9,7 +9,7 @@
 // in this class. The methods in this class record the location in your program where
 // you call them.
 
-package org.firstinspires.ftc.teamcode.util;
+package org.firstinspires.ftc.teamcode.util.LoggingUtils;
 
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;

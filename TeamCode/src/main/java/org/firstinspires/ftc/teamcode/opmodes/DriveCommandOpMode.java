@@ -9,11 +9,13 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.commands.DefaultDrive;
 import org.firstinspires.ftc.teamcode.commands.MovePincherCommand;
+import org.firstinspires.ftc.teamcode.subsystems.ArmSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.DriveSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.EmergencyArmSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.PincherSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.HangSubsystem;
-import org.firstinspires.ftc.teamcode.util.FTCDashboardPackets;
+import org.firstinspires.ftc.teamcode.subsystems.UppieTwoSubsystem;
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
 import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer;
 
 import java.util.function.DoubleSupplier;
@@ -29,9 +31,9 @@ public class DriveCommandOpMode extends CommandOpMode {
     private DoubleSupplier slowdownMultiplier, forwardBack, leftRight, rotation;
 
     private DriveSubsystem driveSubsystem;
-    private HangSubsystem hangSubsystem;
-    private EmergencyArmSubsystem armSubsystem;
+    private ArmSubsystem armSubsystem;
     private PincherSubsystem pincherSubsystem;
+    private UppieTwoSubsystem uppieTwoSubsystem;
 
     private DefaultDrive driveCommand;
 
@@ -59,35 +61,29 @@ public class DriveCommandOpMode extends CommandOpMode {
         }
 
         try {
-            hangSubsystem = new HangSubsystem(hardwareMap);
+            uppieTwoSubsystem = new UppieTwoSubsystem(hardwareMap);
 
             // D-Pad Up and D-Pad Down toggles the manages the hanging
 
             armerController.getGamepadButton(GamepadKeys.Button.Y).whileActiveContinuous(() -> {
-                hangSubsystem.setHangDirection(HangSubsystem.HangDirection.UP);
-            }).whenInactive(() -> {
-                hangSubsystem.setHangDirection(HangSubsystem.HangDirection.IDLE);
-            });
+                uppieTwoSubsystem.setUppieState(UppieTwoSubsystem.UppieState.MAX);
+            }).whenInactive(() -> uppieTwoSubsystem.setUppieState(UppieTwoSubsystem.UppieState.IDLE));
 
             armerController.getGamepadButton(GamepadKeys.Button.X).whileActiveContinuous(() -> {
-                hangSubsystem.setHangDirection(HangSubsystem.HangDirection.DOWN);
-            }).whenInactive(() -> {
-                hangSubsystem.setHangDirection(HangSubsystem.HangDirection.IDLE);
-            });
+                uppieTwoSubsystem.setUppieState(UppieTwoSubsystem.UppieState.MIN);
+            }).whenInactive(() -> uppieTwoSubsystem.setUppieState(UppieTwoSubsystem.UppieState.IDLE));
         } catch (Exception e) {
-            dbp.info("ERROR IN HANG SYSTEM");
+            dbp.info("ERROR IN uppie SYSTEM");
             dbp.error(e);
             dbp.send(true);
-            telemetry.addData("Hang", "Error in hang subsystem: "+e.getMessage());
+            telemetry.addData("UPPIE", "Error in uppie subsystem: "+e.getMessage());
             telemetry.update();
             throw new RuntimeException(e);
         }
 
         try {
-            armSubsystem = new EmergencyArmSubsystem(hardwareMap, telemetry);
+            armSubsystem = new ArmSubsystem(hardwareMap);
             float threshold = .1f;
-
-
 
             // Bumpers handle the lower arm
             // Triggers handle the higher arm
@@ -95,65 +91,11 @@ public class DriveCommandOpMode extends CommandOpMode {
             // Left Joystick X moves the wrist
 
             DoubleSupplier higherSupplier = () -> armerController.getRightY();//() -> armerController.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - armerController.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER);
-            DoubleSupplier lowerSupplier = () -> armerController.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - armerController.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER);
 
             new Trigger(() -> Math.abs(higherSupplier.getAsDouble()) > threshold).whileActiveContinuous(() -> {
-                armSubsystem.setHigherArmPower(higherSupplier.getAsDouble());
+                armSubsystem.setPower(higherSupplier.getAsDouble());
             }).whenInactive(() -> {
-                armSubsystem.setHigherArmPower(0);
-            });
-
-            new Trigger(() -> Math.abs(lowerSupplier.getAsDouble()) > threshold).whileActiveContinuous(() -> {
-                armSubsystem.setLowerArmPower(lowerSupplier.getAsDouble());
-            }).whenInactive(() -> {
-                armSubsystem.setLowerArmPower(0);
-            });
-
-            /*armerController.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whileHeld(() -> {
-                armSubsystem.setLowerArmPower(-1);
-            }).whenInactive(() -> {
-                 armSubsystem.setLowerArmPower(0);
-            });
-
-            armerController.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whileHeld(() -> {
-                armSubsystem.setLowerArmPower(1);
-            }).whenInactive(() -> {
-                armSubsystem.setLowerArmPower(0);
-            });*/
-
-            /*armerController.getGamepadButton(GamepadKeys.Button.A).toggleWhenPressed(() -> {
-                armSubsystem.setPinchState(EmergencyArmSubsystem.PinchState.OPEN);
-            }, () -> armSubsystem.setPinchState(EmergencyArmSubsystem.PinchState.PINCHED));*/
-
-            new Trigger(() -> Math.abs(armerController.getLeftX()) > threshold).whileActiveContinuous(() -> {
-                armSubsystem.setWristPower(armerController.getLeftX());
-            }).whenInactive(() -> armSubsystem.setWristPower(0));
-
-            final double angularVelocityLower = 25;
-            armerController.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(() -> {
-                armSubsystem.constantX(angularVelocityLower);
-            }).whenInactive(() -> {
-                armSubsystem.setLowerArmPower(0);
-                armSubsystem.setHigherArmPower(0);
-            });
-            armerController.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(() -> {
-                armSubsystem.constantX(-angularVelocityLower);
-            }).whenInactive(() -> {
-                armSubsystem.setLowerArmPower(0);
-                armSubsystem.setHigherArmPower(0);
-            });
-
-            armerController.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(() -> {
-                armSubsystem.constantY(angularVelocityLower); // Todo: Might need to swap the negative sign
-            }).whenInactive(() -> {
-                armSubsystem.setLowerArmPower(0);
-                armSubsystem.setHigherArmPower(0);
-            });
-            armerController.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(() -> {
-                armSubsystem.constantY(-angularVelocityLower); // Todo: Might need to swap the negative sign
-            }).whenInactive(() -> {
-                armSubsystem.setLowerArmPower(0);
-                armSubsystem.setHigherArmPower(0);
+                armSubsystem.setPower(0);
             });
 
             /*armerController.getGamepadButton(GamepadKeys.Button.A).toggleWhenPressed(() -> {
@@ -162,11 +104,6 @@ public class DriveCommandOpMode extends CommandOpMode {
                 armSubsystem.setPinchState(EmergencyArmSubsystem.PinchState.PINCHED);
             });*/
 
-            new Trigger(() -> Math.abs(armerController.getLeftX()) > threshold).whileActiveContinuous(() -> {
-                armSubsystem.setWristPower(armerController.getLeftX());
-            }).whenInactive(() -> {
-                armSubsystem.setWristPower(0);
-            });
         } catch (Exception e) {
             dbp.info("ERROR IN ARM SYSTEM");
             dbp.error(e);
@@ -176,6 +113,7 @@ public class DriveCommandOpMode extends CommandOpMode {
             throw new RuntimeException(e);
         }
 
+        /*
         try {
             ServoEx pincher1 = RobotHardwareInitializer.ServoComponent.FINGER_1.getEx(hardwareMap, 0, PincherSubsystem.MAX_ANGLE);
             ServoEx pincher2 = RobotHardwareInitializer.ServoComponent.FINGER_2.getEx(hardwareMap, 0, PincherSubsystem.MAX_ANGLE);
@@ -193,6 +131,7 @@ public class DriveCommandOpMode extends CommandOpMode {
             dbp.send(true);
             throw new RuntimeException(e);
         }
+         */
 
         dbp.info("Subsystems registered.");
         dbp.send(false);
