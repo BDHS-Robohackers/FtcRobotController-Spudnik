@@ -1,19 +1,11 @@
-package org.firstinspires.ftc.teamcode.util.Other;
+package org.firstinspires.ftc.teamcode.util.Other
 
-import java.lang.reflect.Array;
-
-public class ArrayTypeValue<T> implements DynamicTypeValue<T> {
-    private T[] values;
-
-    public ArrayTypeValue(T[] values) {
-        this.values = values;
+class ArrayTypeValue<T>(private val values: Array<T>) : DynamicTypeValue<T> {
+    fun get(index: Int): T {
+        return values[index]
     }
 
-    public T get(int index) {
-        return values[index];
-    }
-
-    public void set(int index, T value) {
-        values[index] = value;
+    fun set(index: Int, value: T) {
+        values[index] = value
     }
 }

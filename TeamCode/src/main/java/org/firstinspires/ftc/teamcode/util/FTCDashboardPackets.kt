@@ -1,102 +1,100 @@
-package org.firstinspires.ftc.teamcode.util;
+package org.firstinspires.ftc.teamcode.util
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.dashboard.FtcDashboard
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket
+import java.io.IOException
+import java.util.Locale
 
-import java.io.IOException;
-
-public class FTCDashboardPackets {
-    public static final FtcDashboard DASHBOARD = FtcDashboard.getInstance();
+class FTCDashboardPackets {
     /**
      * The key to be used when putting a value into a packet.
      * Should be set as the name of the class that is using this.
      */
-    private final String CONTEXT;
-    private TelemetryPacket packet;
-    private final boolean USE_LOGGING;
+    private val CONTEXT: String
+    private var packet: TelemetryPacket? = null
+    private val USE_LOGGING: Boolean
 
-    public enum LoggingLevels {
+    enum class LoggingLevels {
         INFO,
         DEBUG {
-            @Override
-            public String get_level() {
-                return "DEBUG";
+            override fun get_level(): String {
+                return "DEBUG"
             }
         },
         ERROR {
-            @Override
-            public String get_level() {
-                return "ERROR";
+            override fun get_level(): String {
+                return "ERROR"
             }
         },
         WARN {
-            @Override
-            public String get_level() {
-                return "WARN";
+            override fun get_level(): String {
+                return "WARN"
             }
         };
 
-        public String get_level() {
-            return "INFO";
+        open fun get_level(): String {
+            return "INFO"
         }
     }
 
-    public FTCDashboardPackets() {
-        CONTEXT = "ROOT";
-        USE_LOGGING = true;
-        createNewTelePacket();
+    constructor() {
+        CONTEXT = "ROOT"
+        USE_LOGGING = true
+        createNewTelePacket()
     }
 
-    public FTCDashboardPackets(String context) {
-        CONTEXT = context.toUpperCase();
-        USE_LOGGING = true;
-        createNewTelePacket();
+    constructor(context: String) {
+        CONTEXT = context.uppercase(Locale.getDefault())
+        USE_LOGGING = true
+        createNewTelePacket()
     }
 
-    public FTCDashboardPackets(boolean _useLogging) {
-        CONTEXT = "ROOT";
-        USE_LOGGING = _useLogging;
-        createNewTelePacket();
+    constructor(_useLogging: Boolean) {
+        CONTEXT = "ROOT"
+        USE_LOGGING = _useLogging
+        createNewTelePacket()
     }
 
     /**
-     * Creates a new telemetry packet, 
+     * Creates a new telemetry packet,
      * or initializes one if it does
      * not exist.
      */
-    public void createNewTelePacket() {
-        packet = new TelemetryPacket();
+    fun createNewTelePacket() {
+        packet = TelemetryPacket()
         if (USE_LOGGING) {
             try {
-                Logging.setup();
-            } catch (IOException e) {
-                error(e, true, false);
+                Logging.setup()
+            } catch (e: IOException) {
+                error(e, true, false)
             }
         }
     }
 
-    private String getLoggingLevel(LoggingLevels level) {
-        return level.get_level();
+    private fun getLoggingLevel(level: LoggingLevels): String {
+        return level.get_level()
     }
 
-    private void log(String value) {
-        if (USE_LOGGING)
-            Logging.log("%s:%s\t%s", CONTEXT, LoggingLevels.INFO.get_level(), value);
+    private fun log(value: String) {
+        if (USE_LOGGING) Logging.log("%s:%s\t%s", CONTEXT, LoggingLevels.INFO.get_level(), value)
     }
 
-    private void log(String value, LoggingLevels level) {
-        if (USE_LOGGING)
-            Logging.log("%s:%s\t%s", CONTEXT, getLoggingLevel(level), value);
+    private fun log(value: String?, level: LoggingLevels) {
+        if (USE_LOGGING) Logging.log("%s:%s\t%s", CONTEXT, getLoggingLevel(level), value)
     }
 
-    private void log(String key, String value) {
-        if (USE_LOGGING)
-            Logging.log("%s:%s\t%s : %s", CONTEXT, LoggingLevels.INFO.get_level(), key, value);
+    private fun log(key: String, value: String) {
+        if (USE_LOGGING) Logging.log(
+            "%s:%s\t%s : %s",
+            CONTEXT,
+            LoggingLevels.INFO.get_level(),
+            key,
+            value
+        )
     }
 
-    private void log(String key, String value, LoggingLevels level) {
-        if (USE_LOGGING)
-            Logging.log("%s:%s\t%s : %s", CONTEXT, getLoggingLevel(level), key, value);
+    private fun log(key: String, value: String, level: LoggingLevels) {
+        if (USE_LOGGING) Logging.log("%s:%s\t%s : %s", CONTEXT, getLoggingLevel(level), key, value)
     }
 
     /**
@@ -104,42 +102,41 @@ public class FTCDashboardPackets {
      * @param key The string to be put into the keys of a packet
      * @param value The string to be put into the values of a packet
      */
-    public void put(String key, String value) {
-        packet.put(key, value);
-        log(key, value);
+    fun put(key: String, value: String) {
+        packet!!.put(key, value)
+        log(key, value)
     }
 
     /**
      * Takes in a value and puts it into the current packet.
      * @param value The string to be put into the values of a packet
      */
-    public void put(String value) {
-        packet.put(CONTEXT, value);
-        log(value);
+    fun put(value: String) {
+        packet!!.put(CONTEXT, value)
+        log(value)
     }
 
     /**
      * Takes in an exception and puts it into the current packet.
      * @param e The exception to be put into the packet
      */
-    public void error(Exception e) {
-        packet.put("Error", e.getMessage());
-        log(e.getMessage(), LoggingLevels.ERROR);
+    fun error(e: Exception) {
+        packet!!.put("Error", e.message)
+        log(e.message, LoggingLevels.ERROR)
     }
 
     /**
      * Takes in an exception and puts it into the current packet.
      * @param message The message to be put into the packet
      */
-    public void error(String message) {
-        packet.put("Error", message);
-        log(message, LoggingLevels.ERROR);
+    fun error(message: String?) {
+        packet!!.put("Error", message)
+        log(message, LoggingLevels.ERROR)
     }
 
-    public void error(String message, boolean sendPacket) {
-        error(message);
-        if (sendPacket)
-            send(false);
+    fun error(message: String?, sendPacket: Boolean) {
+        error(message)
+        if (sendPacket) send(false)
     }
 
     /**
@@ -148,19 +145,18 @@ public class FTCDashboardPackets {
      * @param sendPacket A boolean of whether or not to send the packet after the exception is put in
      * @param reinitializePacket A boolean of whether or not to reinitialize the packet after it is sent
      */
-    public void error(Exception e, boolean sendPacket, boolean reinitializePacket) {
-        error(e);
-        if (sendPacket)
-            send(reinitializePacket);
+    fun error(e: Exception, sendPacket: Boolean, reinitializePacket: Boolean) {
+        error(e)
+        if (sendPacket) send(reinitializePacket)
     }
 
     /**
      * Takes in a message and puts it into the current packet.
      * @param message The message to be put into the packet
      */
-    public void warn(String message) {
-        packet.put(CONTEXT + " : WARN", message);
-        log(message);
+    fun warn(message: String) {
+        packet!!.put("$CONTEXT : WARN", message)
+        log(message)
     }
 
     /**
@@ -168,19 +164,18 @@ public class FTCDashboardPackets {
      * @param message The message to be put into the packet
      * @param sendPacket Whether or not to send the packet
      */
-    public void warn(String message, boolean sendPacket) {
-        warn(message);
-        if (sendPacket)
-            send(false);
+    fun warn(message: String, sendPacket: Boolean) {
+        warn(message)
+        if (sendPacket) send(false)
     }
 
     /**
      * Takes in a message and puts it into the current packet.
      * @param message The message to be put into the packet
      */
-    public void info(String message) {
-        packet.put(CONTEXT + " : INFO", message);
-        log(message);
+    fun info(message: String) {
+        packet!!.put("$CONTEXT : INFO", message)
+        log(message)
     }
 
     /**
@@ -188,10 +183,9 @@ public class FTCDashboardPackets {
      * @param message The message to be put into the packet
      * @param sendPacket A boolean of whether or not to send the packet after the message is put in
      */
-    public void info(String message, boolean sendPacket) {
-        info(message);
-        if (sendPacket)
-            send(false);
+    fun info(message: String, sendPacket: Boolean) {
+        info(message)
+        if (sendPacket) send(false)
     }
 
     /**
@@ -200,18 +194,17 @@ public class FTCDashboardPackets {
      * @param sendPacket A boolean of whether or not to send the packet after the message is put in
      * @param reinitializePacket A boolean of whether or not to reinitialize the packet after it is sent
      */
-    public void info(String message, boolean sendPacket, boolean reinitializePacket) {
-        info(message);
-        if (sendPacket)
-            send(reinitializePacket);
+    fun info(message: String, sendPacket: Boolean, reinitializePacket: Boolean) {
+        info(message)
+        if (sendPacket) send(reinitializePacket)
     }
 
     /**
      * Takes in a packet and puts it into the current packet.
      * @param packet The packet to be put into the packet
      */
-    public void info(CommonPackets packet) {
-        info(getCommonPacket(packet));
+    fun info(packet: CommonPackets) {
+        info(getCommonPacket(packet))
     }
 
     /**
@@ -220,19 +213,18 @@ public class FTCDashboardPackets {
      * @param sendPacket A boolean of whether or not to send the packet after the packet is put in
      * @param reinitializePacket A boolean of whether or not to reinitialize the packet after it is sent
      */
-    public void info(CommonPackets packet, boolean sendPacket, boolean reinitializePacket) {
-        info(packet);
-        if (sendPacket)
-            send(reinitializePacket);
+    fun info(packet: CommonPackets, sendPacket: Boolean, reinitializePacket: Boolean) {
+        info(packet)
+        if (sendPacket) send(reinitializePacket)
     }
 
     /**
      * Takes in a message and puts it into the current packet.
      * @param message The message to be put into the packet
      */
-    public void debug(String message) {
-        packet.put(CONTEXT + " : DEBUG", message);
-        log(message, LoggingLevels.DEBUG);
+    fun debug(message: String?) {
+        packet!!.put("$CONTEXT : DEBUG", message)
+        log(message, LoggingLevels.DEBUG)
     }
 
     /**
@@ -241,10 +233,9 @@ public class FTCDashboardPackets {
      * @param message The message to be put into the packet
      * @param sendPacket A boolean of whether or not to send the packet after the message is put in
      */
-    public void debug(String message, boolean sendPacket) {
-        debug(message);
-        if (sendPacket)
-            send(false);
+    fun debug(message: String?, sendPacket: Boolean) {
+        debug(message)
+        if (sendPacket) send(false)
     }
 
     /**
@@ -253,18 +244,17 @@ public class FTCDashboardPackets {
      * @param sendPacket A boolean of whether or not to send the packet after the message is put in
      * @param reinitializePacket A boolean of whether or not to reinitialize the packet after it is sent
      */
-    public void debug(String message, boolean sendPacket, boolean reinitializePacket) {
-        debug(message);
-        if (sendPacket)
-            send(reinitializePacket);
+    fun debug(message: String?, sendPacket: Boolean, reinitializePacket: Boolean) {
+        debug(message)
+        if (sendPacket) send(reinitializePacket)
     }
 
     /**
      * Takes in a packet and puts it into the current packet.
      * @param packet The packet to be put into the packet
      */
-    public void debug(CommonPackets packet) {
-        debug(getCommonPacket(packet));
+    fun debug(packet: CommonPackets) {
+        debug(getCommonPacket(packet))
     }
 
     /**
@@ -273,10 +263,9 @@ public class FTCDashboardPackets {
      * @param sendPacket A boolean of whether or not to send the packet after the packet is put in
      * @param reinitializePacket A boolean of whether or not to reinitialize the packet after it is sent
      */
-    public void debug(CommonPackets packet, boolean sendPacket, boolean reinitializePacket) {
-        debug(packet);
-        if (sendPacket)
-            send(reinitializePacket);
+    fun debug(packet: CommonPackets, sendPacket: Boolean, reinitializePacket: Boolean) {
+        debug(packet)
+        if (sendPacket) send(reinitializePacket)
     }
 
     /**
@@ -284,42 +273,41 @@ public class FTCDashboardPackets {
      * @param packet The common packet to retrieve the common message from
      * @return The value of the packet
      */
-    public String getCommonPacket(CommonPackets packet) {
-        return packet.getPacketMessage();
+    fun getCommonPacket(packet: CommonPackets): String {
+        return packet.packetMessage
     }
 
     /**
      * Sends the current packet to the dashboard
      * @param reinitializePacket A boolean of whether or not to reinitialize the packet after it is sent.
      */
-    public void send(boolean reinitializePacket) {
-        DASHBOARD.sendTelemetryPacket(packet);
-        if (reinitializePacket)
-            createNewTelePacket();
+    fun send(reinitializePacket: Boolean) {
+        DASHBOARD.sendTelemetryPacket(packet)
+        if (reinitializePacket) createNewTelePacket()
     }
 
-    public enum CommonPackets {
+    enum class CommonPackets {
         START {
-            @Override
-            public String getPacketMessage() {
-                return "Starting...";
+            fun getPacketMessage(): String {
+                return "Starting..."
             }
         },
         CONTINUE {
-            @Override
-            public String getPacketMessage() {
-                return "Continuing...";
+            fun getPacketMessage(): String {
+                return "Continuing..."
             }
         },
         WAITING {
-            @Override
-            public String getPacketMessage() {
-                return "Waiting...";
+            fun getPacketMessage(): String {
+                return "Waiting..."
             }
         };
 
-        public String getPacketMessage() {
-            return "Unknown Packet";
-        }
+        open val packetMessage: String
+            get() = "Unknown Packet"
+    }
+
+    companion object {
+        val DASHBOARD: FtcDashboard = FtcDashboard.getInstance()
     }
 }

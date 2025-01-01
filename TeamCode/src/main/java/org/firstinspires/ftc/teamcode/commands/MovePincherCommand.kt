@@ -1,31 +1,24 @@
-package org.firstinspires.ftc.teamcode.commands;
+package org.firstinspires.ftc.teamcode.commands
 
-import com.arcrobotics.ftclib.command.CommandBase;
+import com.arcrobotics.ftclib.command.CommandBase
+import org.firstinspires.ftc.teamcode.subsystems.PincherSubsystem
+import org.firstinspires.ftc.teamcode.subsystems.PincherSubsystem.FingerPositions
 
-import org.firstinspires.ftc.teamcode.subsystems.PincherSubsystem;
+@Deprecated("")
+class MovePincherCommand(var subsystem: PincherSubsystem, var position: FingerPositions) :
+    CommandBase() {
+    private var ran: Boolean = false
 
-@Deprecated
-public class MovePincherCommand extends CommandBase {
-
-    PincherSubsystem subsystem;
-    PincherSubsystem.FingerPositions position;
-    boolean ran = false;
-
-    public MovePincherCommand(PincherSubsystem subsystem, PincherSubsystem.FingerPositions position) {
-        this.subsystem = subsystem;
-        this.position = position;
-        addRequirements(subsystem);
+    init {
+        addRequirements(subsystem)
     }
 
-    @Override
-    public void execute() {
-        subsystem.locomoteFinger(position);
-        ran = true;
+    override fun execute() {
+        subsystem.locomoteFinger(position)
+        ran = true
     }
 
-    @Override
-    public boolean isFinished() {
-        return ran;
+    override fun isFinished(): Boolean {
+        return ran
     }
-
 }
