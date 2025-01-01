@@ -26,15 +26,16 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.firstinspires.ftc.teamcode
 
-package org.firstinspires.ftc.teamcode;
-
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.qualcomm.robotcore.util.ElapsedTime
+import kotlin.math.abs
+import kotlin.math.max
 
 /*
  * This file contains an example of a Linear "OpMode".
@@ -63,26 +64,23 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
-
-@TeleOp(name="Basic: Omni Linear OpMode", group="Linear OpMode")
-public class BasicOmniOpMode_Linear extends LinearOpMode {
-
+@TeleOp(name = "Basic: Omni Linear OpMode", group = "Linear OpMode")
+class BasicOmniOpMode_Linear : LinearOpMode() {
     // Declare OpMode members for each of the 4 motors.
-    private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor leftFrontDrive = null;
-    private DcMotor leftBackDrive = null;
-    private DcMotor rightFrontDrive = null;
-    private DcMotor rightBackDrive = null;
+    private val runtime = ElapsedTime()
+    private lateinit var leftFrontDrive: DcMotor
+    private lateinit var leftBackDrive: DcMotor
+    private lateinit var rightFrontDrive: DcMotor
+    private lateinit var rightBackDrive: DcMotor
 
-    @Override
-    public void runOpMode() {
-
+    override fun runOpMode() {
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
-        leftFrontDrive = hardwareMap.get(DcMotorEx.class, "fl_drv");
-        leftBackDrive = hardwareMap.get(DcMotorEx.class, "bl_drv");
-        rightBackDrive = hardwareMap.get(DcMotorEx.class, "br_drv");
-        rightFrontDrive = hardwareMap.get(DcMotorEx.class, "fr_drv");
+
+        leftFrontDrive = hardwareMap.get(DcMotorEx::class.java, "fl_drv")
+        leftBackDrive = hardwareMap.get(DcMotorEx::class.java, "bl_drv")
+        rightBackDrive = hardwareMap.get(DcMotorEx::class.java, "br_drv")
+        rightFrontDrive = hardwareMap.get(DcMotorEx::class.java, "fr_drv")
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
@@ -94,45 +92,46 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
         // when you first test your robot, push the left joystick forward and observe the direction the wheels turn.
         // Reverse the direction (flip FORWARD <-> REVERSE ) of any wheel that runs backward
         // Keep testing until ALL the wheels move the robot forward when you push the left joystick forward.
-        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
-        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftFrontDrive.direction = DcMotorSimple.Direction.REVERSE
+        leftBackDrive.direction = DcMotorSimple.Direction.REVERSE
+        rightFrontDrive.direction = DcMotorSimple.Direction.FORWARD
+        rightBackDrive.direction = DcMotorSimple.Direction.FORWARD
 
         // Wait for the game to start (driver presses PLAY)
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
+        telemetry.addData("Status", "Initialized")
+        telemetry.update()
 
-        waitForStart();
-        runtime.reset();
+        waitForStart()
+        runtime.reset()
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            double max;
+            var max: Double
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
-            double axial   = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
-            double lateral =  gamepad1.left_stick_x;
-            double yaw     =  gamepad1.right_stick_x;
+            val axial =
+                -gamepad1.left_stick_y.toDouble() // Note: pushing stick forward gives negative value
+            val lateral = gamepad1.left_stick_x.toDouble()
+            val yaw = gamepad1.right_stick_x.toDouble()
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
-            double leftFrontPower  = axial + lateral + yaw;
-            double rightFrontPower = axial - lateral - yaw;
-            double leftBackPower   = axial - lateral + yaw;
-            double rightBackPower  = axial + lateral - yaw;
+            var leftFrontPower = axial + lateral + yaw
+            var rightFrontPower = axial - lateral - yaw
+            var leftBackPower = axial - lateral + yaw
+            var rightBackPower = axial + lateral - yaw
 
             // Normalize the values so no wheel power exceeds 100%
             // This ensures that the robot maintains the desired motion.
-            max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
-            max = Math.max(max, Math.abs(leftBackPower));
-            max = Math.max(max, Math.abs(rightBackPower));
+            max = max(abs(leftFrontPower), abs(rightFrontPower))
+            max = max(max, abs(leftBackPower))
+            max = max(max, abs(rightBackPower))
 
             if (max > 1.0) {
-                leftFrontPower  /= max;
-                rightFrontPower /= max;
-                leftBackPower   /= max;
-                rightBackPower  /= max;
+                leftFrontPower /= max
+                rightFrontPower /= max
+                leftBackPower /= max
+                rightBackPower /= max
             }
 
             // This is test code:
@@ -144,22 +143,22 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             //   2) Then make sure they run in the correct direction by modifying the
             //      the setDirection() calls above.
             // Once the correct motors move in the correct direction re-comment this code.
-
-            leftFrontPower  = gamepad1.x ? 1.0 : 0.0;  // X gamepad
-            leftBackPower   = gamepad1.a ? 1.0 : 0.0;  // A gamepad
-            rightFrontPower = gamepad1.y ? 1.0 : 0.0;  // Y gamepad
-            rightBackPower  = gamepad1.b ? 1.0 : 0.0;  // B gamepad
+            leftFrontPower = if (gamepad1.x) 1.0 else 0.0 // X gamepad
+            leftBackPower = if (gamepad1.a) 1.0 else 0.0 // A gamepad
+            rightFrontPower = if (gamepad1.y) 1.0 else 0.0 // Y gamepad
+            rightBackPower = if (gamepad1.b) 1.0 else 0.0 // B gamepad
 
             // Send calculated power to wheels
-            leftFrontDrive.setPower(leftFrontPower);
-            rightFrontDrive.setPower(rightFrontPower);
-            leftBackDrive.setPower(leftBackPower);
-            rightBackDrive.setPower(rightBackPower);
+            leftFrontDrive.power = leftFrontPower
+            rightFrontDrive.power = rightFrontPower
+            leftBackDrive.power = leftBackPower
+            rightBackDrive.power = rightBackPower
 
             // Show the elapsed game time and wheel power.
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
-            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
-            telemetry.update();
+            telemetry.addData("Status", "Run Time: $runtime")
+            telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower)
+            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower)
+            telemetry.update()
         }
-    }}
+    }
+}

@@ -8,45 +8,40 @@
 // Use the logger object in your code to write log messages or use the simpler methods
 // in this class. The methods in this class record the location in your program where
 // you call them.
+package org.firstinspires.ftc.teamcode.util
 
-package org.firstinspires.ftc.teamcode.util;
-
-import com.qualcomm.robotcore.hardware.HardwareDevice;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.FileHandler;
-import java.util.logging.Formatter;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
+import com.qualcomm.robotcore.hardware.HardwareDevice
+import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.HardwareMap.DeviceMapping
+import java.io.IOException
+import java.io.OutputStream
+import java.io.PrintStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.TimeZone
+import java.util.logging.ConsoleHandler
+import java.util.logging.FileHandler
+import java.util.logging.Formatter
+import java.util.logging.Level
+import java.util.logging.LogRecord
+import java.util.logging.Logger
 
 /**
  * Custom logging class. Configures log system (not console) to write to a disk file.
  * Customize the setup() method for the controller phone you are using.
  */
-public class Logging
-{
+object Logging {
     /**
      * PrintStream that writes to out custom logging location.
      */
-    public static final PrintStream	logPrintStream = new PrintStream(new LoggingOutputStream());
+    val logPrintStream: PrintStream = PrintStream(LoggingOutputStream())
 
     /**
      * Used by other classes to implement logging. Other classes should log with methods on this
      * object or the simpler methods included in this class. The methods in class record the
      * location in your program where you call them.
      */
-    public final static Logger logger = Logger.getGlobal();
+    val logger: Logger = Logger.getGlobal()
 
     // The log file can be copied from the ZTE robot controller to your PC for review by using the
     // following AndroidDeBugger command in the Android Studio Terminal window:
@@ -54,16 +49,16 @@ public class Logging
     // ZTE: adb pull //storage/sdcard0/Logging.txt c:\temp\robot_logging.txt
     // MOTO G: adb pull sdcard/Logging.txt c:\temp\robot_logging.txt
     // Control Hub: adb pull sdcard/Logging.txt c:\temp\robot_Logging.txt
-
     /**
      * Indicates if logging is turned on or off.
      */
-    public static boolean enabled = true;
+    var enabled: Boolean = true
 
-    private static FileHandler 		fileTxt;
+    private var fileTxt: FileHandler? = null
+
     //static private SimpleFormatter	formatterTxt;
-    private static LogFormatter		logFormatter;
-    private static boolean          isSetup;
+    private var logFormatter: LogFormatter? = null
+    private var isSetup = false
 
     /**
      * Configures our custom logging. If you don't use this custom logging, logging will go to
@@ -71,44 +66,40 @@ public class Logging
      * With custom logging turned on logging goes to the console and also to the file opened in
      * setup().
      */
-
     /**
      * Call to initialize our custom logging system.
      * @throws IOException
      */
-    static public void setup() throws IOException
-    {
-        if (isSetup)
-        {
-            logger.info("========================================================================");
-            return;
+    @Throws(IOException::class)
+    fun setup() {
+        if (isSetup) {
+            logger.info("========================================================================")
+            return
         }
 
         // get the global logger to configure it and add a file handler.
-        Logger logger = Logger.getGlobal();
+        val logger = Logger.getGlobal()
 
-        logger.setLevel(Level.ALL);
+        logger.level = Level.ALL
 
         // If we decide to redirect system.out to our log handler, then following
         // code will delete the default log handler for the console to prevent
         // a recursive loop. We would only redirect system.out if we only want to
         // log to the file. If we delete the console handler we can skip setting
         // the formatter...otherwise we set our formatter on the console logger.
+        val rootLogger = Logger.getLogger("")
 
-        Logger rootLogger = Logger.getLogger("");
+        val handlers = rootLogger.handlers
 
-        Handler[] handlers = rootLogger.getHandlers();
-
-//            if (handlers[0] instanceof ConsoleHandler)
+        //            if (handlers[0] instanceof ConsoleHandler)
 //            {
 //                rootLogger.removeHandler(handlers[0]);
 //                return;
 //            }
-
-        logFormatter = new LogFormatter();
+        logFormatter = LogFormatter()
 
         // Set our formatter on the console log handler.
-        if (handlers[0] instanceof ConsoleHandler) handlers[0].setFormatter(logFormatter);
+        if (handlers[0] is ConsoleHandler) handlers[0].formatter = logFormatter
 
         // Now create a handler to log to a file on controller phone "disk".
 
@@ -116,57 +107,30 @@ public class Logging
         //fileTxt = new FileHandler("storage/sdcard0/Logging.txt", 0 , 1);
 
         // For MOTO G:
-        fileTxt = new FileHandler("sdcard/Logging.txt", 0 , 1);
+        fileTxt = FileHandler("sdcard/Logging.txt", 0, 1)
 
-        fileTxt.setFormatter(logFormatter);
+        fileTxt!!.formatter =
+            logFormatter
 
-        logger.addHandler(fileTxt);
+        logger.addHandler(fileTxt)
 
-        isSetup = true;
+        isSetup = true
     }
 
     /**
      * Flush logged data to disk file. Not normally needed.
      */
-    public static void flushlog()
-    {
-        fileTxt.flush();
-    }
-
-    // Our custom formatter for logging output.
-
-    private static class LogFormatter extends Formatter
-    {
-        public String format(LogRecord rec)
-        {
-            StringBuffer buf = new StringBuffer(1024);
-
-            buf.append(String.format("<%d>", rec.getThreadID())); //Thread.currentThread().getId()));
-            buf.append(formatDate(rec.getMillis()));
-            buf.append(" ");
-            buf.append(formatMessage(rec));
-            buf.append("\r\n");
-
-            return buf.toString();
-        }
-
-        private String formatDate(long milliseconds)
-        {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss:SSS");
-            dateFormat.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
-            Date resultDate = new Date(milliseconds);
-            return dateFormat.format(resultDate);
-        }
+    fun flushlog() {
+        fileTxt!!.flush()
     }
 
     /**
      * Log blank line with program location.
      */
-    public static void log()
-    {
-        if (!enabled) return;
+    fun log() {
+        if (!enabled) return
 
-        logger.log(Level.INFO, currentMethod(2));
+        logger.log(Level.INFO, currentMethod(2))
     }
 
     /**
@@ -174,11 +138,16 @@ public class Logging
      * @param message message with optional format specifiers for listed parameters
      * @param parms parameter list matching format specifiers
      */
-    public static void log(String message, Object... parms)
-    {
-        if (!enabled) return;
+    fun log(message: String?, vararg parms: Any?) {
+        if (!enabled) return
 
-        logger.log(Level.INFO, String.format("%s: %s", currentMethod(2), String.format(message, parms)));
+        logger.log(
+            Level.INFO, String.format(
+                "%s: %s", currentMethod(2), String.format(
+                    message!!, *parms
+                )
+            )
+        )
     }
 
     /**
@@ -186,66 +155,64 @@ public class Logging
      * @param message message with optional format specifiers for listed parameters
      * @param parms parameter list matching format specifiers
      */
-    public static void logNoMethod(String message, Object... parms)
-    {
-        if (!enabled) return;
+    fun logNoMethod(message: String?, vararg parms: Any?) {
+        if (!enabled) return
 
-        logger.log(Level.INFO, String.format(message, parms));
+        logger.log(
+            Level.INFO, String.format(
+                message!!, *parms
+            )
+        )
     }
 
     /**
      * Log message with no formatting and program location.
      * @param message message with optional format specifiers for listed parameters
      */
-    public static void logNoFormat(String message)
-    {
-        if (!enabled) return;
+    fun logNoFormat(message: String?) {
+        if (!enabled) return
 
-        logger.log(Level.INFO, String.format("%s: %s", currentMethod(2), message));
+        logger.log(Level.INFO, String.format("%s: %s", currentMethod(2), message))
     }
 
     /**
      * Log message with no formatting and no program location.
      * @param message message with optional format specifiers for listed parameters
      */
-    public static void logNoFormatNoMethod(String message)
-    {
-        if (!enabled) return;
+    fun logNoFormatNoMethod(message: String?) {
+        if (!enabled) return
 
-        logger.log(Level.INFO, message);
+        logger.log(Level.INFO, message)
     }
 
     /**
      * Returns program location where call to this method is located.
      */
-    public static String currentMethod()
-    {
-        return currentMethod(2);
+    fun currentMethod(): String {
+        return currentMethod(2)
     }
 
-    private static String currentMethod(Integer level)
-    {
-        StackTraceElement stackTrace[];
+    private fun currentMethod(level: Int): String {
+        val stackTrace = Throwable().stackTrace
 
-        stackTrace = new Throwable().getStackTrace();
-
-        try
-        {
-            return stackTrace[level].toString().split("teamcode.")[1];
-        }
-        catch (Exception e)
-        {
-            try
-            {
-                return stackTrace[level].toString().split("lib.")[1];
-            }
-            catch (Exception e1)
-            {
-                try
-                {
-                    return stackTrace[level].toString().split("activities.")[1];
+        try {
+            return stackTrace[level].toString().split("teamcode.".toRegex())
+                .dropLastWhile { it.isEmpty() }
+                .toTypedArray()[1]
+        } catch (e: Exception) {
+            try {
+                return stackTrace[level].toString().split("lib.".toRegex())
+                    .dropLastWhile { it.isEmpty() }
+                    .toTypedArray()[1]
+            } catch (e1: Exception) {
+                try {
+                    return stackTrace[level].toString().split("activities.".toRegex())
+                        .dropLastWhile { it.isEmpty() }
+                        .toTypedArray()[1]
+                } catch (e2: Exception) {
+                    e2.printStackTrace()
+                    return ""
                 }
-                catch (Exception e2) {e2.printStackTrace(); return "";}
             }
         }
     }
@@ -255,40 +222,33 @@ public class Logging
      * function or later.
      * @param map hardwareMap object.
      */
-    public static void logHardwareDevices(HardwareMap map)
-    {
-        log();
+    fun logHardwareDevices(map: HardwareMap) {
+        log()
 
         // This list must be manually updated when First releases support for new devices.
-
-        logDevices(map.dcMotorController);
-        logDevices(map.dcMotor);
-        logDevices(map.servoController);
-        logDevices(map.servo);
-        logDevices(map.analogInput);
-        logDevices(map.digitalChannel);
-        logDevices(map.pwmOutput);
-        logDevices(map.accelerationSensor);
-        logDevices(map.colorSensor);
-        logDevices(map.compassSensor);
-        logDevices(map.gyroSensor);
-        logDevices(map.irSeekerSensor);
-        logDevices(map.i2cDevice);
-        logDevices(map.led);
-        logDevices(map.lightSensor);
-        logDevices(map.opticalDistanceSensor);
-        logDevices(map.touchSensor);
-        logDevices(map.ultrasonicSensor);
+        logDevices(map.dcMotorController)
+        logDevices(map.dcMotor)
+        logDevices(map.servoController)
+        logDevices(map.servo)
+        logDevices(map.analogInput)
+        logDevices(map.digitalChannel)
+        logDevices(map.pwmOutput)
+        logDevices(map.accelerationSensor)
+        logDevices(map.colorSensor)
+        logDevices(map.compassSensor)
+        logDevices(map.gyroSensor)
+        logDevices(map.irSeekerSensor)
+        logDevices(map.i2cDevice)
+        logDevices(map.led)
+        logDevices(map.lightSensor)
+        logDevices(map.opticalDistanceSensor)
+        logDevices(map.touchSensor)
+        logDevices(map.ultrasonicSensor)
     }
 
-    @SuppressWarnings("unchecked")
-
-    private static void logDevices(HardwareMap.DeviceMapping deviceMap)
-    {
-        for (Map.Entry<String, HardwareDevice> entry :(Set<Map.Entry<String,HardwareDevice>>) deviceMap.entrySet())
-        {
-            HardwareDevice device = entry.getValue();
-            log("%s;%s;%s", entry.getKey(), device.getDeviceName(), device.getConnectionInfo());
+    private fun logDevices(deviceMap: DeviceMapping<*>) {
+        for ((key, device) in deviceMap.entrySet() as Set<Map.Entry<String, HardwareDevice>>) {
+            log("%s;%s;%s", key, device.deviceName, device.connectionInfo)
         }
     }
 
@@ -298,89 +258,103 @@ public class Logging
      * @param dev Instance of a device of DEVICE_TYPE.
      * @return User assigned name or empty string if not found.
      */
-
-    @SuppressWarnings("unchecked")
-
-    public static String getDeviceUserName(HardwareMap.DeviceMapping deviceMap, HardwareDevice dev)
-    {
-        for (Map.Entry<String, HardwareDevice> entry : (Set<Map.Entry<String,HardwareDevice>>) deviceMap.entrySet())
-        {
-            HardwareDevice device = entry.getValue();
-            if (dev == device) return entry.getKey();
+    fun getDeviceUserName(deviceMap: DeviceMapping<*>, dev: HardwareDevice): String {
+        for ((key, device) in deviceMap.entrySet() as Set<Map.Entry<String, HardwareDevice>>) {
+            if (dev === device) return key
         }
 
-        return "";
+        return ""
+    }
+
+    // Our custom formatter for logging output.
+    private class LogFormatter : Formatter() {
+        override fun format(rec: LogRecord): String {
+            val buf = StringBuffer(1024)
+
+            buf.append(String.format("<%d>", rec.threadID)) //Thread.currentThread().getId()));
+            buf.append(formatDate(rec.millis))
+            buf.append(" ")
+            buf.append(formatMessage(rec))
+            buf.append("\r\n")
+
+            return buf.toString()
+        }
+
+        private fun formatDate(milliseconds: Long): String {
+            val dateFormat = SimpleDateFormat("hh:mm:ss:SSS")
+            dateFormat.timeZone = TimeZone.getTimeZone("America/Los_Angeles")
+            val resultDate = Date(milliseconds)
+            return dateFormat.format(resultDate)
+        }
     }
 
     // An output stream that writes to our logging system. Writes data with flush on
     // flush call or on a newline character in the stream.
+    private class LoggingOutputStream : OutputStream() {
+        private var hasBeenClosed = false
+        private var buf: ByteArray
+        private var count = 0
+        private var curBufLength: Int
 
-    private static class LoggingOutputStream extends OutputStream
-    {
-        private static final int	DEFAULT_BUFFER_LENGTH = 2048;
-        private boolean 			hasBeenClosed = false;
-        private byte[] 				buf;
-        private int 				count, curBufLength;
-
-        public LoggingOutputStream()
-        {
-            curBufLength = DEFAULT_BUFFER_LENGTH;
-            buf = new byte[curBufLength];
-            count = 0;
+        init {
+            curBufLength = DEFAULT_BUFFER_LENGTH
+            buf = ByteArray(curBufLength)
         }
 
-        public void write(final int b) throws IOException
-        {
-            if (!enabled) return;
+        @Throws(IOException::class)
+        override fun write(b: Int) {
+            if (!enabled) return
 
-            if (hasBeenClosed) {throw new IOException("The stream has been closed.");}
+            if (hasBeenClosed) {
+                throw IOException("The stream has been closed.")
+            }
 
             // don't log nulls
-            if (b == 0) return;
+            if (b == 0) return
 
             // force flush on newline character, dropping the newline.
-            if ((byte) b == '\n')
-            {
-                flush();
-                return;
+            if (b.toByte() == '\n'.code.toByte()) {
+                flush()
+                return
             }
 
             // would this be writing past the buffer?
-            if (count == curBufLength)
-            {
+            if (count == curBufLength) {
                 // grow the buffer
-                final int newBufLength = curBufLength + DEFAULT_BUFFER_LENGTH;
-                final byte[] newBuf = new byte[newBufLength];
-                System.arraycopy(buf, 0, newBuf, 0, curBufLength);
-                buf = newBuf;
-                curBufLength = newBufLength;
+                val newBufLength = curBufLength + DEFAULT_BUFFER_LENGTH
+                val newBuf = ByteArray(newBufLength)
+                System.arraycopy(buf, 0, newBuf, 0, curBufLength)
+                buf = newBuf
+                curBufLength = newBufLength
             }
 
-            buf[count] = (byte) b;
+            buf[count] = b.toByte()
 
-            count++;
+            count++
         }
 
-        public void flush()
-        {
-            if (count == 0) return;
+        override fun flush() {
+            if (count == 0) return
 
-            final byte[] bytes = new byte[count];
+            val bytes = ByteArray(count)
 
-            System.arraycopy(buf, 0, bytes, 0, count);
+            System.arraycopy(buf, 0, bytes, 0, count)
 
-            String str = new String(bytes);
+            val str = String(bytes)
 
-            logNoFormatNoMethod(str);
+            logNoFormatNoMethod(str)
 
-            count = 0;
+            count = 0
         }
 
-        public void close()
-        {
-            flush();
+        override fun close() {
+            flush()
 
-            hasBeenClosed = true;
+            hasBeenClosed = true
+        }
+
+        companion object {
+            private const val DEFAULT_BUFFER_LENGTH = 2048
         }
     }
 }

@@ -1,10 +1,10 @@
-package org.firstinspires.ftc.teamcode.util.Other;
+package org.firstinspires.ftc.teamcode.util.Other
 
-public interface DynamicTypeValue <T> {
-    default T getValue() {
-        return null;
+interface DynamicTypeValue<T> {
+    fun getValue(): T? {
+        return null
     }
-    default void setValue(final T value) {
 
+    fun setValue(value: T) {
     }
 }

@@ -1,150 +1,131 @@
-package org.firstinspires.ftc.teamcode.util;
+package org.firstinspires.ftc.teamcode.util
 
-import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.Rotation2d;
-import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.SleepAction;
-import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.Vector2d;
-import com.arcrobotics.ftclib.command.SequentialCommandGroup;
-import com.arcrobotics.ftclib.command.WaitCommand;
+import com.acmerobotics.roadrunner.Action
+import com.acmerobotics.roadrunner.Pose2d
+import com.acmerobotics.roadrunner.SequentialAction
+import com.acmerobotics.roadrunner.SleepAction
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder
+import com.acmerobotics.roadrunner.Vector2d
+import org.firstinspires.ftc.teamcode.MecanumDrive
 
-import org.firstinspires.ftc.teamcode.MecanumDrive;
-import org.firstinspires.ftc.teamcode.commands.DriveCommand;
+object AutoTrajectories {
+    const val WAIT_TIME: Double = 4.605
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-
-public class AutoTrajectories {
-
-    public static final double WAIT_TIME = 4.605;
-
-    public static class CompAutoTrajectorySequence {
-        public static final Pose2d INITIAL_POSE = new Pose2d(new Vector2d(5, -65), Math.toRadians(90));
-
-        private final MecanumDrive DRIVE;
-
-        public static TrajectoryActionBuilder START;
-        public static TrajectoryActionBuilder TO_RUNG;
-        public static TrajectoryActionBuilder TO_CORNER;
-        public static TrajectoryActionBuilder TO_BLOCK_LEFT;
-        public static TrajectoryActionBuilder TO_BLOCK_MIDDLE;
-        public static TrajectoryActionBuilder TO_BLOCK_RIGHT;
-
+    class CompAutoTrajectorySequence(private val DRIVE: MecanumDrive) {
         // Change this to change what the robot does in auto
-        private final STATES[] RUN_REEL = {
-                STATES.START,
-                STATES.PLACE_RUNG,
-                STATES.BLOCK_LEFT,
-                STATES.WAIT,
-                STATES.DROP_SAMPLE,
-                STATES.DROP,
-                STATES.WAIT,
-                STATES.TO_CORNER,
-                STATES.WAIT,
-                STATES.TO_RUNG,
-                STATES.PLACE_RUNG,
-                STATES.BLOCK_MIDDLE,
-                STATES.DROP_SAMPLE,
-                STATES.WAIT,
-                STATES.DROP,
-                STATES.END
-        };
+        private val RUN_REEL = arrayOf(
+            STATES.START,
+            STATES.PLACE_RUNG,
+            STATES.BLOCK_LEFT,
+            STATES.WAIT,
+            STATES.DROP_SAMPLE,
+            STATES.DROP,
+            STATES.WAIT,
+            STATES.TO_CORNER,
+            STATES.WAIT,
+            STATES.TO_RUNG,
+            STATES.PLACE_RUNG,
+            STATES.BLOCK_MIDDLE,
+            STATES.DROP_SAMPLE,
+            STATES.WAIT,
+            STATES.DROP,
+            STATES.END
+        )
 
-        public enum STATES {
+        enum class STATES {
             START,
-            TO_RUNG(new Pose2d(new Vector2d(5, -35), Math.toRadians(90))),
-            TO_CORNER(new Pose2d(new Vector2d(64, -65), Math.toRadians(0))),
-            BLOCK_LEFT(new Pose2d(new Vector2d(49, -35), Math.toRadians(90))),
-            BLOCK_MIDDLE(new Pose2d(new Vector2d(60, -35), Math.toRadians(90))),
-            BLOCK_RIGHT(new Pose2d(new Vector2d(70, -35), Math.toRadians(90))),
-            PARK_CORNER(new Pose2d(new Vector2d(43, -65), Math.toRadians(90))),
+            TO_RUNG(Pose2d(Vector2d(5.0, -35.0), Math.toRadians(90.0))),
+            TO_CORNER(Pose2d(Vector2d(64.0, -65.0), Math.toRadians(0.0))),
+            BLOCK_LEFT(Pose2d(Vector2d(49.0, -35.0), Math.toRadians(90.0))),
+            BLOCK_MIDDLE(Pose2d(Vector2d(60.0, -35.0), Math.toRadians(90.0))),
+            BLOCK_RIGHT(Pose2d(Vector2d(70.0, -35.0), Math.toRadians(90.0))),
+            PARK_CORNER(Pose2d(Vector2d(43.0, -65.0), Math.toRadians(90.0))),
             PARK_SUB,
             PLACE_RUNG,
-            WAIT(),
-            DROP_SAMPLE(new Pose2d(new Vector2d(43, -65), Math.toRadians(0))),
+            WAIT,
+            DROP_SAMPLE(Pose2d(Vector2d(43.0, -65.0), Math.toRadians(0.0))),
             DROP,
             END;
 
-            private final Pose2d END_POSE;
-            private final Pose2d START_POSE;
+            val END_POSE: Pose2d
+            private val START_POSE: Pose2d
 
-            STATES() {
-                END_POSE = INITIAL_POSE;
-                START_POSE = INITIAL_POSE;
+            constructor() {
+                END_POSE = INITIAL_POSE
+                START_POSE = INITIAL_POSE
             }
 
-            STATES(Pose2d endPose) {
-                END_POSE = endPose;
-                START_POSE = INITIAL_POSE;
+            constructor(endPose: Pose2d) {
+                END_POSE = endPose
+                START_POSE = INITIAL_POSE
             }
 
-            STATES(Pose2d startPose, Pose2d endPose) {
-                START_POSE = startPose;
-                END_POSE = endPose;
+            constructor(startPose: Pose2d, endPose: Pose2d) {
+                START_POSE = startPose
+                END_POSE = endPose
             }
 
-            public Pose2d get_END_POSE() {
-                return END_POSE;
+            fun get_END_POSE(): Pose2d {
+                return END_POSE
             }
 
-            public Pose2d get_START_POSE() {
-                return START_POSE;
+            fun get_START_POSE(): Pose2d {
+                return START_POSE
             }
         }
 
-        public CompAutoTrajectorySequence(MecanumDrive drive) {
-            DRIVE = drive;
-        }
-
-        public SequentialAction build() {
-            ArrayList<Action> actions = new ArrayList<>();
-            STATES previousState = STATES.START;
-            for (STATES state : RUN_REEL) {
-                switch (state) {
-                    case START:
-                        actions.add(generateStartTrajectory().build());
-                        break;
-                    case WAIT:
-                        actions.add(new SleepAction(1.605));
-                        break;
-                    case PLACE_RUNG:
-                        actions.add(generateToRungTrajectory(previousState).build());
-                        break;
-                    case TO_CORNER:
-                        actions.add(generateToCorner(previousState).build());
-                        break;
-                    case END:
-                    default:
-                        return new SequentialAction(actions);
+        fun build(): SequentialAction {
+            val actions = ArrayList<Action>()
+            var previousState = STATES.START
+            for (state in RUN_REEL) {
+                when (state) {
+                    STATES.START -> actions.add(generateStartTrajectory()!!.build())
+                    STATES.WAIT -> actions.add(SleepAction(1.605))
+                    STATES.PLACE_RUNG -> actions.add(generateToRungTrajectory(previousState)!!.build())
+                    STATES.TO_CORNER -> actions.add(generateToCorner(previousState)!!.build())
+                    STATES.END -> return SequentialAction(actions)
+                    else -> return SequentialAction(actions)
                 }
-                previousState = state;
+                previousState = state
             }
-            return new SequentialAction(actions);
+            return SequentialAction(actions)
         }
 
-        private TrajectoryActionBuilder generateStartTrajectory() {
+        private fun generateStartTrajectory(): TrajectoryActionBuilder? {
             START = DRIVE.actionBuilder(STATES.START.get_START_POSE())
-                    .lineToX(STATES.TO_RUNG.END_POSE.position.x);
-            return START;
+                .lineToX(STATES.TO_RUNG.END_POSE.position.x)
+            return START
         }
 
-        private TrajectoryActionBuilder generateToRungTrajectory(STATES previousState) {
+        private fun generateToRungTrajectory(previousState: STATES): TrajectoryActionBuilder? {
             TO_RUNG = DRIVE.actionBuilder(previousState.get_END_POSE())
-                    .splineToConstantHeading(STATES.TO_RUNG.END_POSE.position, STATES.TO_RUNG.END_POSE.heading);
-            return TO_RUNG;
+                .splineToConstantHeading(
+                    STATES.TO_RUNG.END_POSE.position,
+                    STATES.TO_RUNG.END_POSE.heading
+                )
+            return TO_RUNG
         }
 
-        private TrajectoryActionBuilder generateToCorner(STATES previousState) {
-            Vector2d pos = STATES.TO_CORNER.END_POSE.position;
-            Rotation2d heading = STATES.TO_CORNER.END_POSE.heading;
+        private fun generateToCorner(previousState: STATES): TrajectoryActionBuilder? {
+            val pos = STATES.TO_CORNER.END_POSE.position
+            val heading = STATES.TO_CORNER.END_POSE.heading
             TO_CORNER = DRIVE.actionBuilder(previousState.get_END_POSE())
-                    .splineToConstantHeading(new Vector2d(40, pos.y), heading)
-                    .waitSeconds(2)
-                    .splineToConstantHeading(pos, heading);
+                .splineToConstantHeading(Vector2d(40.0, pos.y), heading)
+                .waitSeconds(2.0)
+                .splineToConstantHeading(pos, heading)
 
-            return TO_CORNER;
+            return TO_CORNER
+        }
+
+        companion object {
+            val INITIAL_POSE: Pose2d = Pose2d(Vector2d(5.0, -65.0), Math.toRadians(90.0))
+
+            var START: TrajectoryActionBuilder? = null
+            var TO_RUNG: TrajectoryActionBuilder? = null
+            var TO_CORNER: TrajectoryActionBuilder? = null
+            var TO_BLOCK_LEFT: TrajectoryActionBuilder? = null
+            var TO_BLOCK_MIDDLE: TrajectoryActionBuilder? = null
+            var TO_BLOCK_RIGHT: TrajectoryActionBuilder? = null
         }
     }
 }
