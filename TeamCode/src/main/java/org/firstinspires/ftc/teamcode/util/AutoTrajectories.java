@@ -1,12 +1,15 @@
 package org.firstinspires.ftc.teamcode.util;
 
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.AngularVelConstraint;
+import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Rotation2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.arcrobotics.ftclib.command.SequentialCommandGroup;
 import com.arcrobotics.ftclib.command.WaitCommand;
@@ -14,15 +17,18 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.commands.DriveCommand;
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class AutoTrajectories {
 
     public static final double WAIT_TIME = 4.605;
 
     public static class CompAutoTrajectorySequence {
+        public final FTCDashboardPackets dbp = new FTCDashboardPackets();
         public static final Pose2d INITIAL_POSE = new Pose2d(new Vector2d(5, -65), Math.toRadians(90));
 
         private final MecanumDrive DRIVE;
@@ -34,41 +40,40 @@ public class AutoTrajectories {
         public static TrajectoryActionBuilder TO_BLOCK_LEFT;
         public static TrajectoryActionBuilder TO_BLOCK_MIDDLE;
         public static TrajectoryActionBuilder TO_BLOCK_RIGHT;
+        public static TrajectoryActionBuilder TO_INTER;
 
         // Change this to change what the robot does in auto
         private final STATES[] RUN_REEL = {
                 STATES.START,
                 STATES.PLACE_RUNG,
-                STATES.BLOCK_LEFT,
                 STATES.WAIT,
-                STATES.DROP_SAMPLE,
-                STATES.DROP,
-                STATES.WAIT,
+                STATES.BACK_TO_START,
                 STATES.TO_CORNER,
                 STATES.WAIT,
-                STATES.TO_RUNG,
+                STATES.TO_RUNG_TWO,
                 STATES.PLACE_RUNG,
-                STATES.BLOCK_MIDDLE,
-                STATES.DROP_SAMPLE,
                 STATES.WAIT,
-                STATES.DROP,
+                STATES.PARK_CORNER,
                 STATES.END
         };
 
         public enum STATES {
             START,
-            TO_RUNG(new Pose2d(new Vector2d(5, -35), Math.toRadians(90))),
-            TO_CORNER(new Pose2d(new Vector2d(64, -65), Math.toRadians(0))),
-            BLOCK_LEFT(new Pose2d(new Vector2d(49, -35), Math.toRadians(90))),
-            BLOCK_MIDDLE(new Pose2d(new Vector2d(60, -35), Math.toRadians(90))),
-            BLOCK_RIGHT(new Pose2d(new Vector2d(70, -35), Math.toRadians(90))),
-            PARK_CORNER(new Pose2d(new Vector2d(43, -65), Math.toRadians(90))),
+            BACK_TO_START,
+            TO_RUNG(new Pose2d(new Vector2d(5, -39), Math.toRadians(90))),
+            TO_RUNG_TWO(new Pose2d(new Vector2d(5, -38), Math.toRadians(90))),
+            TO_CORNER(new Pose2d(new Vector2d(64, -67), Math.toRadians(270))),
+            BLOCK_LEFT(new Pose2d(new Vector2d(49, -40), Math.toRadians(90))),
+            BLOCK_MIDDLE(new Pose2d(new Vector2d(60, -40), Math.toRadians(90))),
+            BLOCK_RIGHT(new Pose2d(new Vector2d(70, -40), Math.toRadians(90))),
+            PARK_CORNER(new Pose2d(new Vector2d(64, -65), Math.toRadians(270))),
             PARK_SUB,
             GRAB_BLOCK,
             PLACE_RUNG,
             WAIT(),
             DROP_SAMPLE(new Pose2d(new Vector2d(43, -65), Math.toRadians(0))),
             DROP,
+            INTERMEDIATE_BLOCK(new Pose2d(new Vector2d(5, -52), Math.toRadians(90))),
             END;
 
             private final Pose2d END_POSE;
@@ -109,28 +114,37 @@ public class AutoTrajectories {
             for (STATES state : RUN_REEL) {
                 switch (state) {
                     case START:
-                        ParallelAction startAction = new ParallelAction(
-                                generateStartTrajectory().build(),
-                                UPPIE.toRung()
-                        );
-                        actions.add(startAction);
+                        actions.add(UPPIE.toRung());
+                        actions.add(generateStartTrajectory().build());
+                        break;
+                    case BACK_TO_START:
+                        actions.add(generateBackToStartTrajectory(previousState).build());
                         break;
                     case WAIT:
                         actions.add(new SleepAction(1.605));
                         break;
                     case TO_RUNG:
-                        ParallelAction toRungAction = new ParallelAction(
-                                generateToRungTrajectory(previousState).build(),
-                                UPPIE.toRung()
-                        );
-                        actions.add(toRungAction);
+                        actions.add(UPPIE.toRung());
+                        actions.add(new SleepAction(1));
+                        actions.add(generateToRungTrajectory(previousState).build());
+                        break;
+                    case TO_RUNG_TWO:
+                        actions.add(UPPIE.toRung());
+                        actions.add(new SleepAction(1));
+                        actions.add(generateToRungTwoTrajectory(previousState).build());
                         break;
                     case PLACE_RUNG:
                         actions.add(UPPIE.toAttach());
                         break;
+                    case INTERMEDIATE_BLOCK:
+                        actions.add(generateToInter(previousState).build());
+                        break;
                     case PARK_CORNER:
+                        actions.add(generatePark(previousState).build());
+                        break;
                     case DROP_SAMPLE:
                     case TO_CORNER:
+                        actions.add(UPPIE.toPickup());
                         actions.add(generateToCorner(previousState).build());
                         break;
                     case DROP:
@@ -138,8 +152,7 @@ public class AutoTrajectories {
                         // TODO: Implement Drop action
                         break;
                     case GRAB_BLOCK:
-                        actions.add(new SleepAction(1.605));
-                        // TODO: Implement grab block action
+                        actions.add(UPPIE.toPickup());
                         break;
                     case BLOCK_LEFT:
                         actions.add(generateToBlockLeft(previousState).build());
@@ -158,30 +171,58 @@ public class AutoTrajectories {
                 }
                 previousState = state;
             }
+            dbp.info("Sequence: " + actions);
+            dbp.send(true);
             return new SequentialAction(actions);
         }
 
         private TrajectoryActionBuilder generateStartTrajectory() {
             START = DRIVE.actionBuilder(STATES.START.get_START_POSE())
-                    .lineToX(STATES.TO_RUNG.END_POSE.position.x);
+                    .lineToY(STATES.TO_RUNG.END_POSE.position.y);
             return START;
+        }
+
+        private TrajectoryActionBuilder generateBackToStartTrajectory(STATES previousState) {
+            return DRIVE.actionBuilder(STATES.TO_RUNG.get_END_POSE())
+                    .lineToY(STATES.START.get_START_POSE().position.y);
         }
 
         private TrajectoryActionBuilder generateToRungTrajectory(STATES previousState) {
             TO_RUNG = DRIVE.actionBuilder(previousState.get_END_POSE())
-                    .splineToConstantHeading(STATES.TO_RUNG.END_POSE.position, STATES.TO_RUNG.END_POSE.heading);
+                    .splineTo(STATES.TO_RUNG.END_POSE.position, STATES.TO_RUNG.END_POSE.heading);
             return TO_RUNG;
+        }
+
+        private TrajectoryActionBuilder generateToRungTwoTrajectory(STATES previousState) {
+            return DRIVE.actionBuilder(previousState.get_END_POSE())
+                    .splineTo(STATES.TO_RUNG_TWO.END_POSE.position, STATES.TO_RUNG_TWO.END_POSE.heading);
         }
 
         private TrajectoryActionBuilder generateToCorner(STATES previousState) {
             Vector2d pos = STATES.TO_CORNER.END_POSE.position;
             Rotation2d heading = STATES.TO_CORNER.END_POSE.heading;
             TO_CORNER = DRIVE.actionBuilder(previousState.get_END_POSE())
-                    .splineToConstantHeading(new Vector2d(40, pos.y), heading)
+                    .splineTo(new Vector2d(pos.x, -50), heading)
                     .waitSeconds(2)
-                    .splineToConstantHeading(pos, heading);
+                    .strafeTo(pos, new TranslationalVelConstraint(10));
 
             return TO_CORNER;
+        }
+
+        private TrajectoryActionBuilder generatePark(STATES previousState) {
+            Vector2d pos = STATES.PARK_CORNER.END_POSE.position;
+            Rotation2d heading = STATES.PARK_CORNER.END_POSE.heading;
+            return DRIVE.actionBuilder(previousState.get_END_POSE())
+                    .splineTo(pos, heading);
+        }
+
+        private TrajectoryActionBuilder generateToInter(STATES previousState) {
+            Vector2d pos = STATES.INTERMEDIATE_BLOCK.END_POSE.position;
+            Rotation2d heading = STATES.TO_CORNER.END_POSE.heading;
+            TO_INTER = DRIVE.actionBuilder(previousState.get_END_POSE())
+                    .lineToY(pos.y);
+
+            return TO_INTER;
         }
 
         private TrajectoryActionBuilder generateToBlockLeft(STATES previousState) {

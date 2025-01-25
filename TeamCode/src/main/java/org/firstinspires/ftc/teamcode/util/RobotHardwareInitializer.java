@@ -47,9 +47,10 @@ public class RobotHardwareInitializer {
         @Deprecated LOWER_ARM("low_arm"),
         @Deprecated HIGHER_ARM("high_arm"),
         @Deprecated HANG_MOTOR("hang"),
-        VIPER_LEFT("viper_left"),
-        VIPER_RIGHT("viper_right"),
-        ARM("robo_arm"),
+        @Deprecated ARM("robo_arm"),
+        INTAKE_MOTOR("intake"),
+        UPPIES("uppies"),
+        EXTENSION_VIPER("viper_extension"),
         ;
         private final String componentName;
         MotorComponent(String componentName) { this.componentName = componentName; }
@@ -82,8 +83,7 @@ public class RobotHardwareInitializer {
         @Deprecated FINGER_1("finger1"), // left finger
         @Deprecated FINGER_2("finger2"), // right finger
         @Deprecated BUCKET_DUMPER("bucket"), // Used to dump the bucket and return to the collecting position
-        @Deprecated INTAKE_TILTER("intake_servo"), // Used to tilt the intake system toward the bucket at to the ground
-        INTAKE("intake")
+        INTAKE_TILTER("intake_servo"), // Used to tilt the intake system toward the bucket at to the ground
         ;
         private final String componentName;
         ServoComponent(String componentName) { this.componentName = componentName; }
@@ -99,6 +99,7 @@ public class RobotHardwareInitializer {
 
     public enum CRServoComponent implements Component<CRServo> {
         @Deprecated WRIST("wrist"),
+        INTAKE("intake")
         ;
 
         private final String componentName;

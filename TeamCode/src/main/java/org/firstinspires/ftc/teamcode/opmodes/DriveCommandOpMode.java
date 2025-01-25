@@ -8,10 +8,12 @@ import com.arcrobotics.ftclib.hardware.ServoEx;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.commands.DefaultDrive;
+import org.firstinspires.ftc.teamcode.commands.ExtendoCommand;
 import org.firstinspires.ftc.teamcode.commands.MovePincherCommand;
 import org.firstinspires.ftc.teamcode.subsystems.ArmSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.DriveSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.EmergencyArmSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.ExtendoSystem;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.PincherSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.HangSubsystem;
@@ -35,6 +37,7 @@ public class DriveCommandOpMode extends CommandOpMode {
     private ArmSubsystem armSubsystem;
     private IntakeSubsystem intakeSubsystem;
     private UppieTwoSubsystem uppieTwoSubsystem;
+    private ExtendoSystem extenderSystem;
 
     private DefaultDrive driveCommand;
 
@@ -64,8 +67,6 @@ public class DriveCommandOpMode extends CommandOpMode {
         try {
             uppieTwoSubsystem = new UppieTwoSubsystem(hardwareMap);
 
-            // D-Pad Up and D-Pad Down toggles the manages the hanging
-
             armerController.getGamepadButton(GamepadKeys.Button.Y).whileActiveContinuous(() -> {
                 uppieTwoSubsystem.setUppieState(UppieTwoSubsystem.UppieState.MAX);
             }).whenInactive(() -> uppieTwoSubsystem.setUppieState(UppieTwoSubsystem.UppieState.IDLE));
@@ -73,8 +74,15 @@ public class DriveCommandOpMode extends CommandOpMode {
             armerController.getGamepadButton(GamepadKeys.Button.X).whileActiveContinuous(() -> {
                 uppieTwoSubsystem.setUppieState(UppieTwoSubsystem.UppieState.MIN);
             }).whenInactive(() -> uppieTwoSubsystem.setUppieState(UppieTwoSubsystem.UppieState.IDLE));
+
+            armerController.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(() -> {
+                uppieTwoSubsystem.setUppieState(UppieTwoSubsystem.UppieState.HOOK);
+            });
+            armerController.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(() -> {
+                uppieTwoSubsystem.setUppieState(UppieTwoSubsystem.UppieState.PICK_UP);
+            });
         } catch (Exception e) {
-            dbp.info("ERROR IN uppie SYSTEM");
+            dbp.info("ERROR IN UPPIE SYSTEM");
             dbp.error(e);
             dbp.send(true);
             telemetry.addData("UPPIE", "Error in uppie subsystem: "+e.getMessage());
@@ -83,44 +91,30 @@ public class DriveCommandOpMode extends CommandOpMode {
         }
 
         try {
-            armSubsystem = new ArmSubsystem(hardwareMap);
-            float threshold = .1f;
+            extenderSystem = new ExtendoSystem(hardwareMap);
 
-            // Bumpers handle the lower arm
-            // Triggers handle the higher arm
-            // "A" toggles the pincher state
-            // Left Joystick X moves the wrist
-
-            DoubleSupplier higherSupplier = () -> armerController.getRightY();//() -> armerController.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - armerController.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER);
-
-            new Trigger(() -> Math.abs(higherSupplier.getAsDouble()) > threshold).whileActiveContinuous(() -> {
-                armSubsystem.setPower(higherSupplier.getAsDouble());
-            }).whenInactive(() -> {
-                armSubsystem.setPower(0);
-            });
-
-            /*armerController.getGamepadButton(GamepadKeys.Button.A).toggleWhenPressed(() -> {
-                armSubsystem.setPinchState(EmergencyArmSubsystem.PinchState.OPEN);
-            }, () -> {
-                armSubsystem.setPinchState(EmergencyArmSubsystem.PinchState.PINCHED);
-            });*/
-
+            armerController.getGamepadButton(GamepadKeys.Button.DPAD_UP).whileActiveContinuous(() -> {
+                extenderSystem.setDirection(ExtendoSystem.Direction.OUTWARD);
+            }).whenInactive(() -> extenderSystem.setDirection(ExtendoSystem.Direction.NONE));
+            armerController.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whileActiveContinuous(() -> {
+                extenderSystem.setDirection(ExtendoSystem.Direction.INWARD);
+            }).whenInactive(() -> extenderSystem.setDirection(ExtendoSystem.Direction.NONE));
         } catch (Exception e) {
-            dbp.info("ERROR IN ARM SYSTEM");
+            dbp.info("ERROR IN EXTENDER SYSTEM");
             dbp.error(e);
             dbp.send(true);
-            telemetry.addData("Arm", "Error in arm subsystem: "+e.getMessage());
+            telemetry.addData("Extender", "Error in extender subsystem: "+e.getMessage());
             telemetry.update();
             throw new RuntimeException(e);
         }
 
-
         try {
             intakeSubsystem = new IntakeSubsystem(hardwareMap);
 
-            armerController.getGamepadButton(GamepadKeys.Button.A).whenPressed(() -> intakeSubsystem.kickSampleOut()).whenReleased(() -> {
-                intakeSubsystem.reset();
-            });
+            armerController.getGamepadButton(GamepadKeys.Button.A).toggleWhenPressed(() -> intakeSubsystem.tiltIntake(), () -> intakeSubsystem.untiltIntake());
+            //armerController.getGamepadButton(GamepadKeys.Button.B).whenPressed(() -> intakeSubsystem.toggleIntakeState());
+            armerController.getGamepadButton(GamepadKeys.Button.B).whenPressed(() -> intakeSubsystem.setIntakeState(true, intakeSubsystem.getIntakeState())).whenReleased(() -> intakeSubsystem.setIntakeState(false, intakeSubsystem.getIntakeState()));
+            armerController.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(() -> intakeSubsystem.reverseIntake());
         } catch (Exception e) {
             dbp.info("ERROR IN INTAKE SYSTEM");
             dbp.error(e);
@@ -164,8 +158,8 @@ public class DriveCommandOpMode extends CommandOpMode {
             }
         };
         leftRight = () -> {
-            int dpadX = (driverController.getButton(GamepadKeys.Button.DPAD_RIGHT) ? 1 : 0)
-                    - (driverController.getButton(GamepadKeys.Button.DPAD_LEFT) ? 1 : 0);
+            int dpadX = - (driverController.getButton(GamepadKeys.Button.DPAD_RIGHT) ? 1 : 0)
+                    + (driverController.getButton(GamepadKeys.Button.DPAD_LEFT) ? 1 : 0);
             if (dpadX != 0) {
                 return dpadX * slowdownMultiplier.getAsDouble();
             } else {

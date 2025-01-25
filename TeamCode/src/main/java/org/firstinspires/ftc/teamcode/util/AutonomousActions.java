@@ -22,7 +22,8 @@ public class AutonomousActions {
 
         public Uppie(HardwareMap map) {
             try {
-                DcMotorEx armMotor = RobotHardwareInitializer.MotorComponent.ARM.getEx(map);
+                DcMotorEx viper = RobotHardwareInitializer.MotorComponent.UPPIES.getEx(map);
+                uppieSubsystem = new UppieTwoSubsystem(viper);
             } catch (Exception e) {
                 dbp.error("Error IN UPPIE (AUTO) SYSTEM");
                 dbp.send(true);
@@ -68,10 +69,10 @@ public class AutonomousActions {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 if (!initialized) {
-                    uppieSubsystem.setUppieState(UppieTwoSubsystem.UppieState.RUNG);
+                    uppieSubsystem.setUppieState(UppieTwoSubsystem.UppieState.HOOK);
                     initialized = true;
                 }
-                return !uppieSubsystem.isIdle();
+                return false;
             }
         }
 
@@ -86,11 +87,26 @@ public class AutonomousActions {
                     uppieSubsystem.setUppieState(UppieTwoSubsystem.UppieState.ATTACH);
                     initialized = true;
                 }
-                return !uppieSubsystem.isIdle();
+                return false;
             }
         }
 
         public Action toAttach() { return new ToAttach(); }
+
+        public class ToPickup implements Action {
+            private boolean initialized = false;
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                if (!initialized) {
+                    uppieSubsystem.setUppieState(UppieTwoSubsystem.UppieState.PICK_UP);
+                    initialized = true;
+                }
+                return false;
+            }
+        }
+
+        public Action toPickup() { return new ToPickup(); }
     }
 
     @Deprecated
@@ -147,6 +163,7 @@ public class AutonomousActions {
         }
     }
 
+    @Deprecated
     public static class EmergencyArm {
         private EmergencyArmSubsystem emergencyArmSubsystem;
 

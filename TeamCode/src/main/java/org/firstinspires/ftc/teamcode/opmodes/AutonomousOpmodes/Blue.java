@@ -11,6 +11,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
+import org.firstinspires.ftc.teamcode.util.AutoTrajectories;
 import org.firstinspires.ftc.teamcode.util.AutonomousActions;
 
 @Config
@@ -42,45 +43,10 @@ public class Blue extends LinearOpMode {
 
         // Trajectories
 
-        AutonomousActions.EmergencyArm emergencyArm = new AutonomousActions.EmergencyArm(hardwareMap, telemetry);
+        // AutonomousActions.EmergencyArm emergencyArm = new AutonomousActions.EmergencyArm(hardwareMap, telemetry);
 
-        TrajectoryActionBuilder red = drive.actionBuilder(initialPose)
-                .lineToY(-35) // (7, -25) 90 deg
-                // Put Specimen on rung
-                .afterTime(.5f, new SequentialAction(
-                        emergencyArm.openPincher()
-                    )
-                )
-                .strafeTo(new Vector2d(50.00, -35.00)) // (50, -35) 90 deg
-                // Grab 1st sample
-                .waitSeconds(3)
-                .strafeToLinearHeading(new Vector2d(50, -60), Math.toRadians(-90)) // (50, -60) -90 deg
-                // Drop off 1st sample
-                .waitSeconds(3)
-                .turnTo(Math.toRadians(90)) // 90 deg
-                .strafeTo(new Vector2d(60, -60.00)) // (60, -60) 90 deg
-                .strafeTo(new Vector2d(60, -35.00)) // (60, -35) 90 deg
-                // Grab 2nd Sample
-                .waitSeconds(3)
-                .strafeToLinearHeading(new Vector2d(60, -60), Math.toRadians(-90)) // (60, -60) -90 deg
-                // Drop off Second Sample
-                .waitSeconds(3)
-                .strafeTo(new Vector2d(48.00, -52.00)) // (48, -52)
-                // Wait for human player to put specimen on wall
-                .waitSeconds(3)
-                .strafeTo(new Vector2d(48, -60)) // (48, -80) -90 deg
-                // Move and pickup specimen
-                .afterTime(.5f, emergencyArm.closePincher())
-                .waitSeconds(3)
-                .turnTo(Math.toRadians(90))
-                .strafeTo(new Vector2d(7.00, -35))
-                // Put specimen on rung
-                .afterTime(.5f, new SequentialAction(
-                                emergencyArm.openPincher()
-                        )
-                )
-                .waitSeconds(3);
+        SequentialAction main = new AutoTrajectories.CompAutoTrajectorySequence(drive, hardwareMap).build();
 
-        Actions.runBlocking(red.build());
+        Actions.runBlocking(main);
     }
 }

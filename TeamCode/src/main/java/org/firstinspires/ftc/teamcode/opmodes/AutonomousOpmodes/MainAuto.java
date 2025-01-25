@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -11,7 +12,7 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.util.AutoTrajectories;
 
 @Config
-@Autonomous(name = "Main_Auto", group = "Autonomous")
+@Autonomous(name = "Main_Auto", group = "Autonomous", preselectTeleOp = "RealestDriverOpMode")
 public class MainAuto extends LinearOpMode {
     int visionOutputPosition = 0;
 
@@ -35,6 +36,11 @@ public class MainAuto extends LinearOpMode {
         telemetry.update();
         waitForStart();
 
-        action.run(new TelemetryPacket());
+        telemetry.addData("Sequence: ", action.getInitialActions().toString());
+        System.out.println("Sequence: " + action.getInitialActions());
+        telemetry.update();
+
+        //action.run(new TelemetryPacket());
+        Actions.runBlocking(compAutoTrajectorySequence.build());
     }
 }

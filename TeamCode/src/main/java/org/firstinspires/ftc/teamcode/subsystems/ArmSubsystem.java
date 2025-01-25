@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
 import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer;
 
 @Config
+@Deprecated
 public class ArmSubsystem extends SubsystemBase {
     private final DcMotorEx ARM_MOTOR;
     private final FTCDashboardPackets dbp = new FTCDashboardPackets(this);
@@ -90,7 +91,7 @@ public class ArmSubsystem extends SubsystemBase {
         super.periodic();
         if (EMERGENCY_OVERRIDE)
             dbp.warn("EMERGENCY OVERRIDE IS ACTIVE!");
-        dbp.info("Current Arm Motor Pos: " + ARM_MOTOR.getCurrentPosition());
-        dbp.send(true);
+        //dbp.info("Current Arm Motor Pos: " + ARM_MOTOR.getCurrentPosition());
+        // dbp.send(true);
     }
 }
