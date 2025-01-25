@@ -65,7 +65,7 @@ public class DriveCommandOpMode extends CommandOpMode {
         }
 
         try {
-            uppieTwoSubsystem = new UppieTwoSubsystem(hardwareMap);
+            uppieTwoSubsystem = new UppieTwoSubsystem(hardwareMap, false);
 
             armerController.getGamepadButton(GamepadKeys.Button.Y).whileActiveContinuous(() -> {
                 uppieTwoSubsystem.setUppieState(UppieTwoSubsystem.UppieState.MAX);

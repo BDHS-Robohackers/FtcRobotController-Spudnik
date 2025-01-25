@@ -53,15 +53,25 @@ public class UppieTwoSubsystem extends SubsystemBase {
     }
 
     public UppieTwoSubsystem(final DcMotorEx viperLeft) {
+        this(viperLeft, true);
+    }
+
+    public UppieTwoSubsystem(final DcMotorEx viperLeft, boolean resetMotorEncoder) {
         this.viper = viperLeft;
-        this.viper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        if (resetMotorEncoder)
+            this.viper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         this.viper.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     public UppieTwoSubsystem(final HardwareMap map) throws Exception {
+        this(map, true);
+    }
+
+    public UppieTwoSubsystem(final HardwareMap map, boolean resetMotorEncoder) throws Exception {
         this.viper = RobotHardwareInitializer.MotorComponent.UPPIES.getEx(map);
         assert this.viper != null;
-        this.viper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        if (resetMotorEncoder)
+            this.viper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         this.viper.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
