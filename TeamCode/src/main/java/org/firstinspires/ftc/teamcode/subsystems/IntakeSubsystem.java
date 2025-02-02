@@ -15,7 +15,10 @@ import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer;
 public class IntakeSubsystem extends SubsystemBase {
 
     DcMotorEx powerMotor;
-    ServoEx tilterServo;
+    //ServoEx tilterServo;
+
+    CRServo tilterServo;
+    final double TILTER_POWER_SCALE = .5f;
     boolean currentState = false;
     final double MAX_POWER = 0.8;
 
@@ -23,17 +26,24 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public IntakeSubsystem(HardwareMap hardwareMap) throws Exception {
         this.powerMotor = RobotHardwareInitializer.MotorComponent.INTAKE_MOTOR.getEx(hardwareMap);
-        this.tilterServo = RobotHardwareInitializer.ServoComponent.INTAKE_TILTER.getEx(hardwareMap);
-        this.tilterServo.setInverted(true);
-        tilterServo.setRange(0, 45);
+        tilterServo = RobotHardwareInitializer.CRServoComponent.INTAKE_TILTER.get(hardwareMap);
+        tilterServo.setDirection(DcMotorSimple.Direction.FORWARD);
+        //this.tilterServo = RobotHardwareInitializer.ServoComponent.INTAKE_TILTER.getEx(hardwareMap);
+        //this.tilterServo.setInverted(true);
+        //tilterServo.setRange(0, 35);
     }
 
     public void tiltIntake() {
-        tilterServo.setPosition(1f);
+        //tilterServo.setPosition(.7f);
+
     }
 
     public void untiltIntake() {
-        tilterServo.setPosition(0f);
+        //tilterServo.setPosition(0.4f);
+    }
+
+    public void moveTiltIntake(double power) {
+        tilterServo.setPower(power * TILTER_POWER_SCALE);
     }
 
     public void setIntakeState(boolean activated, boolean reversed) {

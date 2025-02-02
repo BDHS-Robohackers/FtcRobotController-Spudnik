@@ -20,7 +20,9 @@ public class UppieTwoSubsystem extends SubsystemBase {
 
     private final FTCDashboardPackets dbp = new FTCDashboardPackets("UppieTwoSubsystem");
 
-    public static int PICK_UP_ENCODER_HEIGHT = -350, HOOK_ENCODER_HEIGHT = -2182, ATTACH_ENCODER_HEIGHT = -1705;
+    //public static int PICK_UP_ENCODER_HEIGHT = -350, HOOK_ENCODER_HEIGHT = -2182, ATTACH_ENCODER_HEIGHT = -1705;
+    public static int DOWNWARD_SHIFT = 30;
+    public static int PICK_UP_ENCODER_HEIGHT = DOWNWARD_SHIFT-340, HOOK_ENCODER_HEIGHT = DOWNWARD_SHIFT-2182, ATTACH_ENCODER_HEIGHT = DOWNWARD_SHIFT-1695;
     public static double MAX_POWER = .75f;
     public static double MAX_RTP_POWER = .9f;
     public static boolean KEEP_POS = true;
@@ -77,6 +79,11 @@ public class UppieTwoSubsystem extends SubsystemBase {
 
     public boolean isIdle() {
         return currentState.equals(UppieState.IDLE);
+    }
+
+    public void resetMotorEncoders() {
+        viper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        haltMotors();
     }
 
     @Override

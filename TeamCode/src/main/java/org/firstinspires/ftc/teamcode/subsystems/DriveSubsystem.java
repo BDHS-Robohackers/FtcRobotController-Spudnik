@@ -123,7 +123,7 @@ public class DriveSubsystem extends SubsystemBase {
         ));*/
         drive.setDrivePowers(new PoseVelocity2d(
                 new Vector2d(
-                        gamepad1.left_stick_y,
+                        -gamepad1.left_stick_y,
                         -(gamepad1.right_trigger - gamepad1.left_trigger)
                 ),
                 -gamepad1.right_stick_x

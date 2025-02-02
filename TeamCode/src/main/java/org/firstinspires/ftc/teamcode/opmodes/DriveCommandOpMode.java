@@ -81,6 +81,9 @@ public class DriveCommandOpMode extends CommandOpMode {
             armerController.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(() -> {
                 uppieTwoSubsystem.setUppieState(UppieTwoSubsystem.UppieState.PICK_UP);
             });
+            armerController.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(() -> {
+                uppieTwoSubsystem.setUppieState(UppieTwoSubsystem.UppieState.ATTACH);
+            });
         } catch (Exception e) {
             dbp.info("ERROR IN UPPIE SYSTEM");
             dbp.error(e);
@@ -93,12 +96,25 @@ public class DriveCommandOpMode extends CommandOpMode {
         try {
             extenderSystem = new ExtendoSystem(hardwareMap);
 
-            armerController.getGamepadButton(GamepadKeys.Button.DPAD_UP).whileActiveContinuous(() -> {
+            /*armerController.getGamepadButton(GamepadKeys.Button.DPAD_UP).whileActiveContinuous(() -> {
                 extenderSystem.setDirection(ExtendoSystem.Direction.OUTWARD);
             }).whenInactive(() -> extenderSystem.setDirection(ExtendoSystem.Direction.NONE));
             armerController.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whileActiveContinuous(() -> {
                 extenderSystem.setDirection(ExtendoSystem.Direction.INWARD);
+            }).whenInactive(() -> extenderSystem.setDirection(ExtendoSystem.Direction.NONE));*/
+
+            Trigger rightTrigger = new Trigger(() -> armerController.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.1);
+            Trigger leftTrigger = new Trigger(() -> armerController.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.1);
+
+            rightTrigger.whileActiveContinuous(() -> {
+                extenderSystem.setDirection(ExtendoSystem.Direction.OUTWARD);
             }).whenInactive(() -> extenderSystem.setDirection(ExtendoSystem.Direction.NONE));
+            leftTrigger.whileActiveContinuous(() -> {
+                extenderSystem.setDirection(ExtendoSystem.Direction.INWARD);
+            }).whenInactive(() -> extenderSystem.setDirection(ExtendoSystem.Direction.NONE));
+
+            armerController.getGamepadButton(GamepadKeys.Button.BACK).whenPressed(() -> uppieTwoSubsystem.resetMotorEncoders());
+
         } catch (Exception e) {
             dbp.info("ERROR IN EXTENDER SYSTEM");
             dbp.error(e);
@@ -111,10 +127,15 @@ public class DriveCommandOpMode extends CommandOpMode {
         try {
             intakeSubsystem = new IntakeSubsystem(hardwareMap);
 
-            armerController.getGamepadButton(GamepadKeys.Button.A).toggleWhenPressed(() -> intakeSubsystem.tiltIntake(), () -> intakeSubsystem.untiltIntake());
+            //armerController.getGamepadButton(GamepadKeys.Button.A).toggleWhenPressed(() -> intakeSubsystem.tiltIntake(), () -> intakeSubsystem.untiltIntake());
+            DoubleSupplier intakeTiltSupplier = () -> armerController.getLeftY();
+            Trigger intakeTiltTrigger = new Trigger(() -> Math.abs(intakeTiltSupplier.getAsDouble()) > .1);
+            intakeTiltTrigger.whileActiveContinuous(() -> intakeSubsystem.moveTiltIntake(intakeTiltSupplier.getAsDouble()))
+                    .whenInactive(() -> intakeSubsystem.moveTiltIntake(0));
+
             //armerController.getGamepadButton(GamepadKeys.Button.B).whenPressed(() -> intakeSubsystem.toggleIntakeState());
             armerController.getGamepadButton(GamepadKeys.Button.B).whenPressed(() -> intakeSubsystem.setIntakeState(true, intakeSubsystem.getIntakeState())).whenReleased(() -> intakeSubsystem.setIntakeState(false, intakeSubsystem.getIntakeState()));
-            armerController.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(() -> intakeSubsystem.reverseIntake());
+            armerController.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(() -> intakeSubsystem.reverseIntake()).whenReleased(() -> intakeSubsystem.setIntakeState(false, intakeSubsystem.getIntakeState()));
         } catch (Exception e) {
             dbp.info("ERROR IN INTAKE SYSTEM");
             dbp.error(e);

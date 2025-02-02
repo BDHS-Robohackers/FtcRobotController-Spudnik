@@ -99,7 +99,7 @@ public class RobotHardwareInitializer {
 
     public enum CRServoComponent implements Component<CRServo> {
         @Deprecated WRIST("wrist"),
-        INTAKE("intake")
+        INTAKE_TILTER("intake_servo"),
         ;
 
         private final String componentName;
