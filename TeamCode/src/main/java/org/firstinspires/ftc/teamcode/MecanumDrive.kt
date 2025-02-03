@@ -7,35 +7,23 @@ import com.acmerobotics.roadrunner.AccelConstraint
 import com.acmerobotics.roadrunner.Action
 import com.acmerobotics.roadrunner.AngularVelConstraint
 import com.acmerobotics.roadrunner.DualNum
-import com.acmerobotics.roadrunner.DualNum.get
-import com.acmerobotics.roadrunner.DualNum.value
 import com.acmerobotics.roadrunner.HolonomicController
 import com.acmerobotics.roadrunner.MecanumKinematics
-import com.acmerobotics.roadrunner.MecanumKinematics.WheelVelocities.all
 import com.acmerobotics.roadrunner.MinVelConstraint
 import com.acmerobotics.roadrunner.MotorFeedforward
 import com.acmerobotics.roadrunner.Pose2d
-import com.acmerobotics.roadrunner.Pose2dDual.value
-import com.acmerobotics.roadrunner.PosePath.get
 import com.acmerobotics.roadrunner.PoseVelocity2d
 import com.acmerobotics.roadrunner.PoseVelocity2dDual
-import com.acmerobotics.roadrunner.PoseVelocity2dDual.value
 import com.acmerobotics.roadrunner.ProfileAccelConstraint
 import com.acmerobotics.roadrunner.ProfileParams
 import com.acmerobotics.roadrunner.Rotation2d
-import com.acmerobotics.roadrunner.Rotation2dDual.value
-import com.acmerobotics.roadrunner.TankKinematics.WheelVelocities.all
 import com.acmerobotics.roadrunner.Time
-import com.acmerobotics.roadrunner.TimeProfile.get
 import com.acmerobotics.roadrunner.TimeTrajectory
-import com.acmerobotics.roadrunner.TimeTrajectory.get
 import com.acmerobotics.roadrunner.TimeTurn
-import com.acmerobotics.roadrunner.TimeTurn.get
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder
 import com.acmerobotics.roadrunner.TrajectoryBuilderParams
 import com.acmerobotics.roadrunner.TurnConstraints
 import com.acmerobotics.roadrunner.Twist2dDual
-import com.acmerobotics.roadrunner.Twist2dDual.value
 import com.acmerobotics.roadrunner.Vector2d
 import com.acmerobotics.roadrunner.Vector2dDual
 import com.acmerobotics.roadrunner.VelConstraint
@@ -43,7 +31,6 @@ import com.acmerobotics.roadrunner.ftc.DownsampledWriter
 import com.acmerobotics.roadrunner.ftc.Encoder
 import com.acmerobotics.roadrunner.ftc.FlightRecorder.write
 import com.acmerobotics.roadrunner.ftc.LazyImu
-import com.acmerobotics.roadrunner.ftc.LazyImu.get
 import com.acmerobotics.roadrunner.ftc.OverflowEncoder
 import com.acmerobotics.roadrunner.ftc.RawEncoder
 import com.acmerobotics.roadrunner.ftc.throwIfModulesAreOutdated
@@ -181,7 +168,7 @@ class MecanumDrive(hardwareMap: HardwareMap, var pose: Pose2d) {
                 )
             )
 
-            val heading: Rotation2d = exp.exp(angles.getYaw(AngleUnit.RADIANS))
+            val heading: Rotation2d = Rotation2d.exp(angles.getYaw(AngleUnit.RADIANS))
 
             if (!initialized) {
                 initialized = true
@@ -201,7 +188,7 @@ class MecanumDrive(hardwareMap: HardwareMap, var pose: Pose2d) {
 
             val headingDelta = heading.minus(lastHeading!!)
             val twist = kinematics.forward<Time>(
-                WheelIncrements<Time>(
+                MecanumKinematics.WheelIncrements<Time>(
                     DualNum<Time>(
                         doubleArrayOf(
                             (leftFrontPosVel.position - lastLeftFrontPos).toDouble(),
@@ -236,7 +223,7 @@ class MecanumDrive(hardwareMap: HardwareMap, var pose: Pose2d) {
 
             lastHeading = heading
 
-            MatchLogger.Companion.getInstance().logRobotPose(pose)
+            MatchLogger.Companion.instance.logRobotPose(pose)
 
             return Twist2dDual(
                 twist.line,
@@ -278,11 +265,11 @@ class MecanumDrive(hardwareMap: HardwareMap, var pose: Pose2d) {
 
         localizer = DriveLocalizer()
 
-        write("MECANUM_PARAMS", PARAMS)
+        // write("MECANUM_PARAMS", PARAMS)
     }
 
     fun setDrivePowers(powers: PoseVelocity2d) {
-        val wheelVels: WheelVelocities<Time> = MecanumKinematics(1.0).inverse(
+        val wheelVels: MecanumKinematics.WheelVelocities<Time> = MecanumKinematics(1.0).inverse(
             PoseVelocity2dDual.constant<Time>(powers, 1)
         )
 
@@ -343,14 +330,14 @@ class MecanumDrive(hardwareMap: HardwareMap, var pose: Pose2d) {
 
             val robotVelRobot = updatePoseEstimate()
 
-            val command: PoseVelocity2dDual<Time?> = HolonomicController(
+            val command: PoseVelocity2dDual<Time> = HolonomicController(
                 PARAMS.axialGain, PARAMS.lateralGain, PARAMS.headingGain,
                 PARAMS.axialVelGain, PARAMS.lateralVelGain, PARAMS.headingVelGain
             )
                 .compute(txWorldTarget, pose, robotVelRobot)
             driveCommandWriter.write(DriveCommandMessage(command))
 
-            val wheelVels: WheelVelocities<Time?> = kinematics.inverse(command)
+            val wheelVels: MecanumKinematics.WheelVelocities<Time> = kinematics.inverse(command)
             val voltage = voltageSensor.voltage
 
             val feedforward = MotorFeedforward(
@@ -431,14 +418,14 @@ class MecanumDrive(hardwareMap: HardwareMap, var pose: Pose2d) {
 
             val robotVelRobot = updatePoseEstimate()
 
-            val command: PoseVelocity2dDual<Time?> = HolonomicController(
+            val command: PoseVelocity2dDual<Time> = HolonomicController(
                 PARAMS.axialGain, PARAMS.lateralGain, PARAMS.headingGain,
                 PARAMS.axialVelGain, PARAMS.lateralVelGain, PARAMS.headingVelGain
             )
                 .compute(txWorldTarget, pose, robotVelRobot)
             driveCommandWriter.write(DriveCommandMessage(command))
 
-            val wheelVels: WheelVelocities<Time?> = kinematics.inverse(command)
+            val wheelVels: MecanumKinematics.WheelVelocities<Time> = kinematics.inverse(command)
             val voltage = voltageSensor.voltage
             val feedforward = MotorFeedforward(
                 PARAMS.kS,

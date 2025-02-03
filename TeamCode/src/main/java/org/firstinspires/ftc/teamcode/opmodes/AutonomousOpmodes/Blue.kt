@@ -7,7 +7,7 @@ import com.acmerobotics.roadrunner.ftc.runBlocking
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import org.firstinspires.ftc.teamcode.MecanumDrive
-import org.firstinspires.ftc.teamcode.util.AutoTrajectories.CompAutoTrajectorySequence
+import org.firstinspires.ftc.teamcode.util.AutoTrajectories
 
 @Config
 @Autonomous(name = "BLUE_TEST_AUTO_PIXEL", group = "Autonomous")
@@ -39,7 +39,7 @@ class Blue : LinearOpMode() {
         // Trajectories
 
         // AutonomousActions.EmergencyArm emergencyArm = new AutonomousActions.EmergencyArm(hardwareMap, telemetry);
-        val main = CompAutoTrajectorySequence(drive, hardwareMap).build()
+        val main = AutoTrajectories.CompAutoTrajectorySequence(drive, hardwareMap).build()
 
         runBlocking(main)
     }

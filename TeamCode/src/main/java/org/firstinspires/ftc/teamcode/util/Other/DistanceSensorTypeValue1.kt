@@ -8,7 +8,9 @@ class DistanceSensorTypeValue(private var value: DistanceSensor) :
         return value
     }
 
-    override fun setValue(value: DistanceSensor) {
-        this.value = value
+    override fun setValue(value: DistanceSensor?) {
+        if (value != null) {
+            this.value = value
+        }
     }
 }

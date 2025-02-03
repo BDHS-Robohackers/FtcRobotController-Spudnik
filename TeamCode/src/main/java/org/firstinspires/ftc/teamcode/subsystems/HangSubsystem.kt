@@ -9,13 +9,10 @@ import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer
 
 @Deprecated("")
 class HangSubsystem(hardwareMap: HardwareMap) : SubsystemBase() {
-    val extensionMotor: DcMotor? = RobotHardwareInitializer.MotorComponent.HANG_MOTOR[hardwareMap]
+    private val extensionMotor: DcMotor = RobotHardwareInitializer.MotorComponent.HANG_MOTOR[hardwareMap]
     private val dbp = FTCDashboardPackets("Hang Subsystem")
 
     fun setHangDirection(direction: HangDirection) {
-        if (extensionMotor == null) {
-            return
-        }
 
         extensionMotor.power = (if (direction == HangDirection.IDLE) 0 else 1).toDouble()
         // TODO: Verify if the Direction.FORWARD and REVERSE is correct (may need to reverse it)

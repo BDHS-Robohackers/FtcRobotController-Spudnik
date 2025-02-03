@@ -13,7 +13,7 @@ class PincherSubsystem(var finger1: ServoEx, var finger2: ServoEx) : SubsystemBa
     private val dbp = FTCDashboardPackets("FingerSubsystem")
 
     enum class FingerPositions(val angle: Float, val angleUnit: AngleUnit) {
-        ZERO(0, AngleUnit.DEGREES),
+        ZERO(0f, AngleUnit.DEGREES),
         OPEN(MAX_ANGLE / 2f, AngleUnit.DEGREES),
         CLOSED(MAX_ANGLE, AngleUnit.DEGREES)
     }
@@ -60,7 +60,7 @@ class PincherSubsystem(var finger1: ServoEx, var finger2: ServoEx) : SubsystemBa
         dbp.send(true)
 
         currentFingerPosition = position
-        MatchLogger.getInstance().genericLog("Finger", MatchLogger.FileType.FINGER, position.name)
+        MatchLogger.instance.genericLog("Finger", MatchLogger.FileType.FINGER, position.name)
     }
 
     fun closeFinger() {

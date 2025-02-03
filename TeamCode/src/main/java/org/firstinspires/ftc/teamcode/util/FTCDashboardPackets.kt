@@ -200,25 +200,6 @@ class FTCDashboardPackets {
     }
 
     /**
-     * Takes in a packet and puts it into the current packet.
-     * @param packet The packet to be put into the packet
-     */
-    fun info(packet: CommonPackets) {
-        info(getCommonPacket(packet))
-    }
-
-    /**
-     * Takes in a packet and puts it into the current packet.
-     * @param packet The common message to be put into the packet
-     * @param sendPacket A boolean of whether or not to send the packet after the packet is put in
-     * @param reinitializePacket A boolean of whether or not to reinitialize the packet after it is sent
-     */
-    fun info(packet: CommonPackets, sendPacket: Boolean, reinitializePacket: Boolean) {
-        info(packet)
-        if (sendPacket) send(reinitializePacket)
-    }
-
-    /**
      * Takes in a message and puts it into the current packet.
      * @param message The message to be put into the packet
      */
@@ -250,61 +231,12 @@ class FTCDashboardPackets {
     }
 
     /**
-     * Takes in a packet and puts it into the current packet.
-     * @param packet The packet to be put into the packet
-     */
-    fun debug(packet: CommonPackets) {
-        debug(getCommonPacket(packet))
-    }
-
-    /**
-     * Takes in a packet and puts it into the current packet.
-     * @param packet The common message to be put into the packet
-     * @param sendPacket A boolean of whether or not to send the packet after the packet is put in
-     * @param reinitializePacket A boolean of whether or not to reinitialize the packet after it is sent
-     */
-    fun debug(packet: CommonPackets, sendPacket: Boolean, reinitializePacket: Boolean) {
-        debug(packet)
-        if (sendPacket) send(reinitializePacket)
-    }
-
-    /**
-     * Takes in a packet and returns the value of the packet
-     * @param packet The common packet to retrieve the common message from
-     * @return The value of the packet
-     */
-    fun getCommonPacket(packet: CommonPackets): String {
-        return packet.packetMessage
-    }
-
-    /**
      * Sends the current packet to the dashboard
      * @param reinitializePacket A boolean of whether or not to reinitialize the packet after it is sent.
      */
     fun send(reinitializePacket: Boolean) {
         DASHBOARD.sendTelemetryPacket(packet)
         if (reinitializePacket) createNewTelePacket()
-    }
-
-    enum class CommonPackets {
-        START {
-            fun getPacketMessage(): String {
-                return "Starting..."
-            }
-        },
-        CONTINUE {
-            fun getPacketMessage(): String {
-                return "Continuing..."
-            }
-        },
-        WAITING {
-            fun getPacketMessage(): String {
-                return "Waiting..."
-            }
-        };
-
-        open val packetMessage: String
-            get() = "Unknown Packet"
     }
 
     companion object {

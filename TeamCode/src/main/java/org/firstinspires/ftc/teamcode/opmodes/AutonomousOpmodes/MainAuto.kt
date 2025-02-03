@@ -6,7 +6,7 @@ import com.acmerobotics.roadrunner.ftc.runBlocking
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import org.firstinspires.ftc.teamcode.MecanumDrive
-import org.firstinspires.ftc.teamcode.util.AutoTrajectories.CompAutoTrajectorySequence
+import org.firstinspires.ftc.teamcode.util.AutoTrajectories
 
 @Config
 @Autonomous(name = "Main_Auto", group = "Autonomous", preselectTeleOp = "RealestDriverOpMode")
@@ -24,7 +24,8 @@ class MainAuto : LinearOpMode() {
             if (isStopRequested) return
         }
 
-        val compAutoTrajectorySequence = CompAutoTrajectorySequence(drive, hardwareMap)
+        val compAutoTrajectorySequence =
+            AutoTrajectories.CompAutoTrajectorySequence(drive, hardwareMap)
         val action = compAutoTrajectorySequence.build()
 
         val startPosition = visionOutputPosition

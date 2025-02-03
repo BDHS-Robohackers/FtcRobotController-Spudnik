@@ -13,7 +13,7 @@ import com.acmerobotics.roadrunner.ftc.RawEncoder
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.messages.ThreeDeadWheelInputsMessage
-import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer.EncoderComponent
+import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer
 
 @Config
 class ThreeDeadWheelLocalizer(hardwareMap: HardwareMap, inPerTick: Double) : Localizer {
@@ -33,11 +33,11 @@ class ThreeDeadWheelLocalizer(hardwareMap: HardwareMap, inPerTick: Double) : Loc
     //par1 = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "intake")));
     //perp = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "extender")));
     val par0: Encoder =
-        OverflowEncoder(RawEncoder(EncoderComponent.ENCODER_PAR0[hardwareMap]))
+        OverflowEncoder(RawEncoder(RobotHardwareInitializer.EncoderComponent.ENCODER_PAR0[hardwareMap]))
     val par1: Encoder =
-        OverflowEncoder(RawEncoder(EncoderComponent.ENCODER_PAR1[hardwareMap]))
+        OverflowEncoder(RawEncoder(RobotHardwareInitializer.EncoderComponent.ENCODER_PAR1[hardwareMap]))
     val perp: Encoder =
-        OverflowEncoder(RawEncoder(EncoderComponent.ENCODER_PERP[hardwareMap]))
+        OverflowEncoder(RawEncoder(RobotHardwareInitializer.EncoderComponent.ENCODER_PERP[hardwareMap]))
 
     val inPerTick: Double
 

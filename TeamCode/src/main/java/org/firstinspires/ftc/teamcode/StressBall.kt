@@ -51,7 +51,7 @@ class StressBall : OpMode() {
         //FeedMotor = hardwareMap.crservo.get("FeedMotor");
         ContinuousShooter = hardwareMap.crservo["ContinuousShooter"]
         SmallContinuous = hardwareMap.crservo["SmallContinuous"]
-
+        /*
         frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER)
         frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER)
         backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER)
@@ -61,6 +61,8 @@ class StressBall : OpMode() {
         frontLeft.setDirection(DcMotorSimple.Direction.FORWARD)
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE)
         backRight.setDirection(DcMotorSimple.Direction.REVERSE)
+
+         */
 
         //        FeedMotor.setDirection(FORWARD);
         telemetry.update()

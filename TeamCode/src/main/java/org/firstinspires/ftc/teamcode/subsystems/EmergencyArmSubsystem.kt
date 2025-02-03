@@ -148,8 +148,8 @@ class EmergencyArmSubsystem(map: HardwareMap, var telemetry: Telemetry) : Subsys
     }
 
     enum class PinchState(val pinchPosition: Double) {
-        PINCHED(0),  // left state
-        OPEN(0.5f),
+        PINCHED(0.0),  // left state
+        OPEN(0.5),
         // middle state
     }
 

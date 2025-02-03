@@ -4,13 +4,17 @@ import com.arcrobotics.ftclib.hardware.ServoEx
 import com.arcrobotics.ftclib.hardware.SimpleServo
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.CRServo
+import com.qualcomm.robotcore.hardware.ColorSensor
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.DistanceSensor
 import com.qualcomm.robotcore.hardware.HardwareDevice
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.IMU
 import com.qualcomm.robotcore.hardware.Servo
+import com.qualcomm.robotcore.hardware.TouchSensor
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets
 
 /**
  * The RobotHardwareInitializer abstracts the process of setting the hardware variables in RobotOpMode.
@@ -140,27 +144,30 @@ object RobotHardwareInitializer {
         val componentName: String
     }
 
-    enum class MotorComponent(override val componentName: String) : Component<DcMotor> {
+    enum class MotorComponent(override val componentName: String) :
+        Component<DcMotor?> {
         LEFT_FRONT("fl_drv"),
         RIGHT_FRONT("fr_drv"),
         LEFT_BACK("bl_drv"),
         RIGHT_BACK("br_drv"),
 
+        @Deprecated("")
         LOWER_ARM("low_arm"),
+
+        @Deprecated("")
         HIGHER_ARM("high_arm"),
+
+        @Deprecated("")
         HANG_MOTOR("hang"),
 
         @Deprecated("")
-        UPPIES("uppies"),  // Used to move the pincher and bucket up and down
-        @Deprecated("")
-        EXTENDER("extender"),  // Used to move in intake system forward and back
-        @Deprecated("")
-        EXTENDER2("extender2"),  // Used to move in intake system forward and back
-        @Deprecated("")
-        INTAKE("intake"),
-        ; // Used to pick up blocks
+        ARM("robo_arm"),
+        INTAKE_MOTOR("intake"),
+        UPPIES("uppies"),
+        EXTENSION_VIPER("viper_extension"),
+        ;
 
-        override fun get(map: HardwareMap): DcMotor {
+        override operator fun get(map: HardwareMap): DcMotor {
             return map.get(DcMotor::class.java, componentName)
         }
 
@@ -170,15 +177,19 @@ object RobotHardwareInitializer {
         }
     }
 
-    enum class ServoComponent(override val componentName: String) : Component<Servo> {
+    enum class ServoComponent(override val componentName: String) :
+        Component<Servo?> {
+        @Deprecated("")
         PINCHER("pincher"),
+
         @Deprecated("")
         FINGER_1("finger1"),  // left finger
+
         @Deprecated("")
         FINGER_2("finger2"),  // right finger
+
         @Deprecated("")
         BUCKET_DUMPER("bucket"),  // Used to dump the bucket and return to the collecting position
-        @Deprecated("")
         INTAKE_TILTER("intake_servo"),
         ; // Used to tilt the intake system toward the bucket at to the ground
 
@@ -187,42 +198,69 @@ object RobotHardwareInitializer {
         }
 
         @Throws(Exception::class)
-        fun getEx(map: HardwareMap?, minAngle: Double, maxAngle: Double): ServoEx {
+        fun getEx(map: HardwareMap, minAngle: Double, maxAngle: Double): ServoEx {
             return SimpleServo(map, componentName, minAngle, maxAngle)
         }
 
         @Throws(Exception::class)
-        fun getEx(map: HardwareMap?): ServoEx {
+        fun getEx(map: HardwareMap): ServoEx {
             return SimpleServo(map, componentName, 0.0, 0.0)
         }
     }
 
-    enum class CRServoComponent(override val componentName: String) : Component<CRServo> {
-        WRIST("wrist");
+    enum class CRServoComponent(override val componentName: String) :
+        Component<CRServo?> {
+        @Deprecated("")
+        WRIST("wrist"),
+        INTAKE_TILTER("intake_servo"),
+        ;
 
-        override fun get(map: HardwareMap): CRServo {
-            return map.get(CRServo::class.java, componentName)
+        override operator fun get(map: HardwareMap): CRServo {
+            return map.get(
+                CRServo::class.java,
+                componentName
+            )
         }
     }
 
-    enum class EncoderComponent(override val componentName: String) : Component<DcMotorEx> {
+    enum class EncoderComponent(override val componentName: String) :
+        Component<DcMotorEx?> {
         ENCODER_PAR0("fl_drv"),  // previously fr_drv, left
         ENCODER_PAR1("fr_drv"),  // previously intake, right
         ENCODER_PERP("br_drv"); // previously extender, back
 
-        override fun get(map: HardwareMap): DcMotorEx {
+        override operator fun get(map: HardwareMap): DcMotorEx {
             return map.get(DcMotorEx::class.java, componentName)
         }
     }
 
+    enum class TouchSensorComponent(override val componentName: String) :
+        Component<TouchSensor?> {
+        ;
+
+        override fun get(map: HardwareMap): TouchSensor {
+            return map.get(TouchSensor::class.java, componentName)
+        }
+    }
+
+    enum class ColorV3SensorComponent(override val componentName: String) :
+        Component<ColorSensor?> {
+        ;
+
+        @Throws(Exception::class)
+        override fun get(map: HardwareMap): ColorSensor {
+            return map.get(ColorSensor::class.java, componentName)
+        }
+    }
+
     enum class DistanceSensorComponent(override val componentName: String) :
-        Component<DistanceSensor> {
+        Component<DistanceSensor?> {
         // EXTENDER_SENSOR("extender_color_sensor"),
         RIGHT_SENSOR("right_distance"),
         CENTER_SENSOR("center_distance"),
         LEFT_SENSOR("left_distance");
 
-        override fun get(map: HardwareMap): DistanceSensor {
+        override operator fun get(map: HardwareMap): DistanceSensor {
             return map.get(DistanceSensor::class.java, componentName)
         }
     }

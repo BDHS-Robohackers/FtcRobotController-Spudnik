@@ -7,7 +7,9 @@ class ColorSensorTypeValue(private var value: ColorSensor) : DynamicTypeValue<Co
         return value
     }
 
-    override fun setValue(value: ColorSensor) {
-        this.value = value
+     override fun setValue(value: ColorSensor?) {
+         if (value != null) {
+             this.value = value
+         }
     }
 }

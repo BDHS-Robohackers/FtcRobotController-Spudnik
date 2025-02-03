@@ -32,6 +32,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlin.math.abs
 import kotlin.math.max
@@ -91,10 +92,10 @@ class BasicOmniOpMode_Linear : LinearOpMode() {
         // when you first test your robot, push the left joystick forward and observe the direction the wheels turn.
         // Reverse the direction (flip FORWARD <-> REVERSE ) of any wheel that runs backward
         // Keep testing until ALL the wheels move the robot forward when you push the left joystick forward.
-        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE)
-        leftBackDrive.setDirection(DcMotor.Direction.REVERSE)
-        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD)
-        rightBackDrive.setDirection(DcMotor.Direction.FORWARD)
+        (leftFrontDrive as DcMotorEx?)?.direction = DcMotorSimple.Direction.REVERSE
+        (leftBackDrive as DcMotorEx?)?.direction = DcMotorSimple.Direction.REVERSE
+        (rightFrontDrive as DcMotorEx?)?.direction = DcMotorSimple.Direction.FORWARD
+        (rightBackDrive as DcMotorEx?)?.direction = DcMotorSimple.Direction.FORWARD
 
         // Wait for the game to start (driver presses PLAY)
         telemetry.addData("Status", "Initialized")
@@ -148,10 +149,10 @@ class BasicOmniOpMode_Linear : LinearOpMode() {
             rightBackPower = if (gamepad1.b) 1.0 else 0.0 // B gamepad
 
             // Send calculated power to wheels
-            leftFrontDrive.setPower(leftFrontPower)
-            rightFrontDrive.setPower(rightFrontPower)
-            leftBackDrive.setPower(leftBackPower)
-            rightBackDrive.setPower(rightBackPower)
+            (leftFrontDrive as DcMotorEx?)?.power = leftFrontPower
+            (rightFrontDrive as DcMotorEx?)?.power = rightFrontPower
+            (leftBackDrive as DcMotorEx?)?.power = leftBackPower
+            (rightBackDrive as DcMotorEx?)?.power = rightBackPower
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: $runtime")

@@ -40,7 +40,7 @@ class DriveSubsystem : SubsystemBase {
     )
 
     constructor(hMap: HardwareMap?) {
-        drive = MecanumDrive(hMap, Pose2d(0.0, 0.0, 0.0))
+        drive = hMap?.let { MecanumDrive(it, Pose2d(0.0, 0.0, 0.0)) }
     }
 
     constructor(

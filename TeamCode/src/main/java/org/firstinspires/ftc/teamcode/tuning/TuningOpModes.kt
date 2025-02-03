@@ -24,7 +24,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
 import org.firstinspires.ftc.teamcode.MecanumDrive
-import org.firstinspires.ftc.teamcode.TankDrive
 import org.firstinspires.ftc.teamcode.ThreeDeadWheelLocalizer
 import org.firstinspires.ftc.teamcode.TwoDeadWheelLocalizer
 import java.util.Arrays
@@ -49,103 +48,59 @@ object TuningOpModes {
 
         val dvf: DriveViewFactory
         if (DRIVE_CLASS == MecanumDrive::class.java) {
-            dvf = DriveViewFactory { hardwareMap: HardwareMap ->
-                val md = MecanumDrive(hardwareMap, Pose2d(0.0, 0.0, 0.0))
-                val leftEncs: MutableList<Encoder> = ArrayList()
-                val rightEncs: MutableList<Encoder> = ArrayList()
-                val parEncs: MutableList<Encoder> = ArrayList()
-                val perpEncs: MutableList<Encoder> = ArrayList()
-                if (md.localizer is MecanumDrive.DriveLocalizer) {
-                    val dl = md.localizer
-                    leftEncs.add(dl.leftFront)
-                    leftEncs.add(dl.leftBack)
-                    rightEncs.add(dl.rightFront)
-                    rightEncs.add(dl.rightBack)
-                } else if (md.localizer is ThreeDeadWheelLocalizer) {
-                    val dl = md.localizer
-                    parEncs.add(dl.par0)
-                    parEncs.add(dl.par1)
-                    perpEncs.add(dl.perp)
-                } else if (md.localizer is TwoDeadWheelLocalizer) {
-                    val dl = md.localizer
-                    parEncs.add(dl.par)
-                    perpEncs.add(dl.perp)
-                } else {
-                    throw RuntimeException("unknown localizer: " + md.localizer.javaClass.name)
-                }
-                DriveView(
-                    DriveType.MECANUM,
-                    MecanumDrive.PARAMS.inPerTick,
-                    MecanumDrive.PARAMS.maxWheelVel,
-                    MecanumDrive.PARAMS.minProfileAccel,
-                    MecanumDrive.PARAMS.maxProfileAccel,
-                    hardwareMap.getAll(LynxModule::class.java),
-                    Arrays.asList(
-                        md.leftFront,
-                        md.leftBack
-                    ),
-                    Arrays.asList(
-                        md.rightFront,
-                        md.rightBack
-                    ),
-                    leftEncs,
-                    rightEncs,
-                    parEncs,
-                    perpEncs,
-                    md.lazyImu,
-                    md.voltageSensor
-                ) {
-                    MotorFeedforward(
-                        MecanumDrive.PARAMS.kS,
-                        MecanumDrive.PARAMS.kV / MecanumDrive.PARAMS.inPerTick,
-                        MecanumDrive.PARAMS.kA / MecanumDrive.PARAMS.inPerTick
-                    )
-                }
-            }
-        } else if (DRIVE_CLASS == TankDrive::class.java) {
-            dvf = DriveViewFactory { hardwareMap: HardwareMap ->
-                val td = TankDrive(hardwareMap, Pose2d(0.0, 0.0, 0.0))
-                val leftEncs: MutableList<Encoder> = ArrayList()
-                val rightEncs: MutableList<Encoder> = ArrayList()
-                val parEncs: MutableList<Encoder> = ArrayList()
-                val perpEncs: MutableList<Encoder> = ArrayList()
-                if (td.localizer is TankDrive.DriveLocalizer) {
-                    val dl = td.localizer
-                    leftEncs.addAll(dl.leftEncs)
-                    rightEncs.addAll(dl.rightEncs)
-                } else if (td.localizer is ThreeDeadWheelLocalizer) {
-                    val dl = td.localizer
-                    parEncs.add(dl.par0)
-                    parEncs.add(dl.par1)
-                    perpEncs.add(dl.perp)
-                } else if (td.localizer is TwoDeadWheelLocalizer) {
-                    val dl = td.localizer
-                    parEncs.add(dl.par)
-                    perpEncs.add(dl.perp)
-                } else {
-                    throw RuntimeException("unknown localizer: " + td.localizer.javaClass.name)
-                }
-                DriveView(
-                    DriveType.TANK,
-                    TankDrive.PARAMS.inPerTick,
-                    TankDrive.PARAMS.maxWheelVel,
-                    TankDrive.PARAMS.minProfileAccel,
-                    TankDrive.PARAMS.maxProfileAccel,
-                    hardwareMap.getAll(LynxModule::class.java),
-                    td.leftMotors,
-                    td.rightMotors,
-                    leftEncs,
-                    rightEncs,
-                    parEncs,
-                    perpEncs,
-                    td.lazyImu,
-                    td.voltageSensor
-                ) {
-                    MotorFeedforward(
-                        TankDrive.PARAMS.kS,
-                        TankDrive.PARAMS.kV / TankDrive.PARAMS.inPerTick,
-                        TankDrive.PARAMS.kA / TankDrive.PARAMS.inPerTick
-                    )
+            dvf = object : DriveViewFactory {
+                override fun make(h: HardwareMap): DriveView {
+                    val md = MecanumDrive(h, Pose2d(0.0, 0.0, 0.0))
+                    val leftEncs: MutableList<Encoder> = ArrayList()
+                    val rightEncs: MutableList<Encoder> = ArrayList()
+                    val parEncs: MutableList<Encoder> = ArrayList()
+                    val perpEncs: MutableList<Encoder> = ArrayList()
+                    if (md.localizer is MecanumDrive.DriveLocalizer) {
+                        val dl = md.localizer
+                        leftEncs.add(dl.leftFront)
+                        leftEncs.add(dl.leftBack)
+                        rightEncs.add(dl.rightFront)
+                        rightEncs.add(dl.rightBack)
+                    } else if (md.localizer is ThreeDeadWheelLocalizer) {
+                        val dl = md.localizer
+                        parEncs.add(dl.par0)
+                        parEncs.add(dl.par1)
+                        perpEncs.add(dl.perp)
+                    } else if (md.localizer is TwoDeadWheelLocalizer) {
+                        val dl = md.localizer
+                        parEncs.add(dl.par)
+                        perpEncs.add(dl.perp)
+                    } else {
+                        throw RuntimeException("unknown localizer: " + md.localizer.javaClass.name)
+                    }
+                    return DriveView(
+                        DriveType.MECANUM,
+                        MecanumDrive.PARAMS.inPerTick,
+                        MecanumDrive.PARAMS.maxWheelVel,
+                        MecanumDrive.PARAMS.minProfileAccel,
+                        MecanumDrive.PARAMS.maxProfileAccel,
+                        h.getAll(LynxModule::class.java),
+                        Arrays.asList(
+                            md.leftFront,
+                            md.leftBack
+                        ),
+                        Arrays.asList(
+                            md.rightFront,
+                            md.rightBack
+                        ),
+                        leftEncs,
+                        rightEncs,
+                        parEncs,
+                        perpEncs,
+                        md.lazyImu,
+                        md.voltageSensor
+                    ) {
+                        MotorFeedforward(
+                            MecanumDrive.PARAMS.kS,
+                            MecanumDrive.PARAMS.kV / MecanumDrive.PARAMS.inPerTick,
+                            MecanumDrive.PARAMS.kA / MecanumDrive.PARAMS.inPerTick
+                        )
+                    }
                 }
             }
         } else {

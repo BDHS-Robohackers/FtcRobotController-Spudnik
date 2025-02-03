@@ -22,8 +22,6 @@ class ArmSubsystem : SubsystemBase {
             ARM_MOTOR.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
             ARM_MOTOR.mode = DcMotor.RunMode.RUN_USING_ENCODER
         }
-
-        dbp.info(FTCDashboardPackets.CommonPackets.INIT)
     }
 
     constructor(map: HardwareMap) {
@@ -33,8 +31,6 @@ class ArmSubsystem : SubsystemBase {
             ARM_MOTOR.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
             ARM_MOTOR.mode = DcMotor.RunMode.RUN_USING_ENCODER
         }
-
-        dbp.info(FTCDashboardPackets.CommonPackets.INIT)
     }
 
     fun setPower(power: Double) {

@@ -65,7 +65,7 @@ class TwoDeadWheelLocalizer(
             TwoDeadWheelInputsMessage(parPosVel, perpPosVel, angles, angularVelocity)
         )
 
-        val heading: Rotation2d = exp.exp(angles.getYaw(AngleUnit.RADIANS))
+        val heading: Rotation2d = Rotation2d.exp(angles.getYaw(AngleUnit.RADIANS))
 
         // see https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/617
         val rawHeadingVel = angularVelocity.zRotationRate.toDouble()

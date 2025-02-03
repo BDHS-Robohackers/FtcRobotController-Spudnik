@@ -8,13 +8,17 @@ import org.firstinspires.ftc.teamcode.util.MatchRecorder.MatchLogger
 
 class MatchLoggerSubsystem(hardwareMap: HardwareMap?, POSE_ESTIMATE: Pose2d?) :
     SubsystemBase() {
-    var mecanumDrive: MecanumDrive =
-        MecanumDrive(hardwareMap, POSE_ESTIMATE)
-    val MATCH_LOGGER: MatchLogger = MatchLogger.getInstance()
+    var mecanumDrive: Unit? =
+        hardwareMap?.let {
+            if (POSE_ESTIMATE != null) {
+                MecanumDrive(it, POSE_ESTIMATE)
+            }
+        }
+    val MATCH_LOGGER: MatchLogger = MatchLogger.instance
 
     override fun periodic() {
-        mecanumDrive.updatePoseEstimate()
-        MATCH_LOGGER.logRobotPose(mecanumDrive.pose)
+        // mecanumDrive.()
+        // MATCH_LOGGER.logRobotPose(mecanumDrive.pose)
         // NOTE: Some of the subsystems (like the ArmSubsystem) already has the logging system implemented in the code.
         // Remember to not log things twice.
         super.periodic()

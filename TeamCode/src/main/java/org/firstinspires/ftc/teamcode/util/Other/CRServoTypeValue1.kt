@@ -7,7 +7,9 @@ class CRServoTypeValue(private var value: CRServo) : DynamicTypeValue<CRServo?> 
         return value
     }
 
-    override fun setValue(value: CRServo) {
-        this.value = value
+    override fun setValue(value: CRServo?) {
+        if (value != null) {
+            this.value = value
+        }
     }
 }

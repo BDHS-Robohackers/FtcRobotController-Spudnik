@@ -30,27 +30,24 @@ class MatchLogger {
 
             var greatestMatchNumber = 1
             val listFiles = dataFolder.listFiles()
-            if (listFiles != null) {
-                for (i in listFiles.indices) {
-                    val file = listFiles[i]
-                    if (!file.isDirectory) {
-                        continue
-                    }
-                    val name = file.name
-                    if (!name.contains(MATCH_FILE_NAME)) {
-                        // Not a valid match directory
-                        continue
-                    }
-                    val matchNumber = name.substring(MATCH_FILE_NAME.length, name.length - 1)
-                    // TODO: Verify that the substring thing works and doesn't produce an error
-                    try {
-                        val parsedInteger = matchNumber.toInt()
-                        greatestMatchNumber =
-                            max(parsedInteger.toDouble(), greatestMatchNumber.toDouble())
-                                .toInt()
-                    } catch (e: NumberFormatException) {
-                        e.printStackTrace()
-                    }
+            for (i in listFiles!!.indices) {
+                val file = listFiles[i]
+                if (!file.isDirectory) {
+                    continue
+                }
+                val name = file.name
+                if (!name.contains(MATCH_FILE_NAME)) {
+                    // Not a valid match directory
+                    continue
+                }
+                val matchNumber = name.substring(MATCH_FILE_NAME.length, name.length - 1)
+                // TODO: Verify that the substring thing works and doesn't produce an error
+                try {
+                    val parsedInteger = matchNumber.toInt()
+                    greatestMatchNumber =
+                        max(parsedInteger.toDouble(), greatestMatchNumber.toDouble()).toInt()
+                } catch (e: NumberFormatException) {
+                    e.printStackTrace()
                 }
             }
 
@@ -164,10 +161,12 @@ class MatchLogger {
         String message = String.format("Arm: %s | %s", getCalledMethodName(), arrayToString(relevantVariables));
         write(message, FileType.ARM, FileType.VERBOSE);
     }*/
-    fun genericLog(header: String?, fileType: FileType?, vararg relevantVariables: Any) {
+    fun genericLog(header: String?, fileType: FileType, vararg relevantVariables: Any) {
         try {
-            val message =
-                String.format("%s: %s", calledMethodName, arrayToString(relevantVariables))
+            val message = String.format(
+                "%s: %s",
+                calledMethodName, arrayToString(relevantVariables)
+            )
             write(message, fileType, FileType.VERBOSE)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -180,7 +179,8 @@ class MatchLogger {
                 if (REFLECTIONLESS) {
                     return "[reflectionless]"
                 }
-                val elements = Throwable().stackTrace
+                val elements =
+                    Throwable().stackTrace
                 if (elements == null || elements.size == 0) {
                     return "[err_no_stacktrace]"
                 }
@@ -203,12 +203,12 @@ class MatchLogger {
         var matchLogger: MatchLogger? = null
         const val REFLECTIONLESS: Boolean = false // turn to true if the robot is slow
 
-        val instance: MatchLogger?
+        val instance: MatchLogger
             get() {
                 if (matchLogger == null) {
                     matchLogger = MatchLogger()
                 }
-                return matchLogger
+                return matchLogger!!
             }
 
         fun youJustLostTheGame(lol: Any?): String {

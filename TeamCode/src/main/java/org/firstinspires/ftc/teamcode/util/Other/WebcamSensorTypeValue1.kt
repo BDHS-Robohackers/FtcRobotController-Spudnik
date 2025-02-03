@@ -7,7 +7,9 @@ class WebcamSensorTypeValue(private var value: WebcamName) : DynamicTypeValue<We
         return value
     }
 
-    override fun setValue(value: WebcamName) {
-        this.value = value
+    override fun setValue(value: WebcamName?) {
+        if (value != null) {
+            this.value = value
+        }
     }
 }

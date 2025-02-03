@@ -31,7 +31,7 @@ class DefaultDrive : CommandBase {
     }
 
     override fun execute() {
-        m_drive.moveRobot(gamepad1)
+        gamepad1?.let { m_drive.moveRobot(it) }
     }
 
     override fun isFinished(): Boolean {

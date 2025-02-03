@@ -7,7 +7,9 @@ class ServoTypeValue(private var value: Servo) : DynamicTypeValue<Servo?> {
         return this.value
     }
 
-    override fun setValue(value: Servo) {
-        this.value = value
+    override fun setValue(value: Servo?) {
+        if (value != null) {
+            this.value = value
+        }
     }
 }

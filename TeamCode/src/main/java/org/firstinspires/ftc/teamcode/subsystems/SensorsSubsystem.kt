@@ -12,16 +12,16 @@ import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer
 class SensorsSubsystem(hardwareMap: HardwareMap) : SubsystemBase() {
     private val imu_dbp = FTCDashboardPackets(this)
 
-    var imu: RevIMU = RobotHardwareInitializer.IMUComponent.IMU[hardwareMap] as RevIMU
+    var imu: RevIMU? = null; // RobotHardwareInitializer.IMUComponent.IMU[hardwareMap] as RevIMU
 
     init {
-        imu.init(parameters)
+        imu?.init(parameters)
     }
 
     fun debugIMU() {
-        imu_dbp.debug("IMU Angles: " + imu.angles.contentToString())
-        imu_dbp.debug("Absolute Heading: " + imu.absoluteHeading)
-        imu_dbp.debug("Rotation2D: " + imu.rotation2d)
+        imu_dbp.debug("IMU Angles: " + imu?.angles.contentToString())
+        imu_dbp.debug("Absolute Heading: " + (imu?.absoluteHeading ))
+        imu_dbp.debug("Rotation2D: " + (imu?.rotation2d ))
         imu_dbp.send(true)
     }
 

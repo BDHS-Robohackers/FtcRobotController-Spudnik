@@ -7,7 +7,9 @@ class MotorTypeValue(private var value: DcMotor) : DynamicTypeValue<DcMotor?> {
         return value
     }
 
-    override fun setValue(value: DcMotor) {
-        this.value = value
+    override fun setValue(value: DcMotor?) {
+        if (value != null) {
+            this.value = value
+        }
     }
 }
