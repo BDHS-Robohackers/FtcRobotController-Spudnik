@@ -1,27 +1,20 @@
-package org.firstinspires.ftc.teamcode.commands;
+package org.firstinspires.ftc.teamcode.commands
 
-import com.arcrobotics.ftclib.command.CommandBase;
+import com.arcrobotics.ftclib.command.CommandBase
+import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem
 
-import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
-
-@Deprecated
-public class ToggleIntakeCommand extends CommandBase {
-
-    IntakeSubsystem intakeSubsystem;
-
-    public ToggleIntakeCommand(IntakeSubsystem intakeSubsystem) {
-        this.intakeSubsystem = intakeSubsystem;
-        addRequirements(intakeSubsystem);
+@Deprecated("")
+class ToggleIntakeCommand(var intakeSubsystem: IntakeSubsystem) : CommandBase() {
+    init {
+        addRequirements(intakeSubsystem)
     }
 
-    @Override
-    public void initialize() {
-        super.initialize();
-        intakeSubsystem.toggleIntakeState();
+    override fun initialize() {
+        super.initialize()
+        intakeSubsystem.toggleIntakeState()
     }
 
-    @Override
-    public boolean isFinished() {
-        return true;
+    override fun isFinished(): Boolean {
+        return true
     }
 }

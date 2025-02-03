@@ -1,283 +1,292 @@
-package org.firstinspires.ftc.teamcode.subsystems;
+package org.firstinspires.ftc.teamcode.subsystems
 
-import com.acmerobotics.dashboard.config.Config;
-import com.arcrobotics.ftclib.command.SubsystemBase;
-import com.arcrobotics.ftclib.hardware.ServoEx;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
-import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer;
-
-import java.util.Objects;
+import com.acmerobotics.dashboard.config.Config
+import com.arcrobotics.ftclib.command.SubsystemBase
+import com.arcrobotics.ftclib.hardware.ServoEx
+import com.qualcomm.robotcore.hardware.CRServo
+import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.robotcore.external.Telemetry
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets
+import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer
+import java.util.Objects
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 @Config
-@Deprecated
-public class EmergencyArmSubsystem extends SubsystemBase {
+@Deprecated("")
+class EmergencyArmSubsystem(map: HardwareMap, var telemetry: Telemetry) : SubsystemBase() {
+    var armMotorLower: DcMotorEx = RobotHardwareInitializer.MotorComponent.LOWER_ARM.getEx(map)
+    var armMotorHigher: DcMotorEx = RobotHardwareInitializer.MotorComponent.HIGHER_ARM.getEx(map)
+    var pinchServo: ServoEx? = null
+    var wristServo: CRServo? = null
 
-    public DcMotorEx armMotorLower, armMotorHigher;
-    public ServoEx pinchServo;
-    public CRServo wristServo;
+    /**
+     * @param power between [-1, 1]
+     */
+    fun setLowerArmPower(power: Double) {
+        armMotorLower.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        armMotorLower.setVelocity(
+            power * LOWER_ARM_SPEED_PERCENT * LOWER_ARM_ANGLE_VELOCITY,
+            AngleUnit.DEGREES
+        )
+        if (abs(power) < KINEMATICS_DIVISOR_THRESHOLD) {
+            armMotorLower.setVelocity(0.0, AngleUnit.DEGREES)
+            haltLowerArm()
+        }
+    }
 
-    public static final double THRESHOLD = .5f;
+    /**
+     * @param power between [-1, 1]
+     */
+    fun setHigherArmPower(power: Double) {
+        armMotorHigher.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        armMotorHigher.setVelocity(
+            power * HIGHER_ARM_SPEED_PERCENT * HIGHER_ARM_ANGLE_VELOCITY,
+            AngleUnit.DEGREES
+        )
+        if (abs(power) < KINEMATICS_DIVISOR_THRESHOLD) {
+            armMotorHigher.power = 0.0
+            armMotorHigher.setVelocity(0.0, AngleUnit.DEGREES)
+            haltHigherArm()
+        }
+    }
 
-    public static double WRIST_SPEED = 1f;
-    public static double LOWER_ARM_SPEED_PERCENT = 1;
-    public static double HIGHER_ARM_SPEED_PERCENT = 1;
-    public static double SET_POSITION_POWER = .55f;
+    fun haltLowerArm() {
+        armMotorLower.targetPosition = armMotorLower.currentPosition
+        armMotorLower.mode = DcMotor.RunMode.RUN_TO_POSITION
+        armMotorLower.power = SET_POSITION_POWER
+    }
 
-    public static double LOWER_ARM_ANGLE_VELOCITY = 250;
-    public static double HIGHER_ARM_ANGLE_VELOCITY = 250;
+    fun haltHigherArm() {
+        armMotorHigher.targetPosition = armMotorHigher.currentPosition
+        armMotorHigher.mode = DcMotor.RunMode.RUN_TO_POSITION
+        armMotorHigher.power = SET_POSITION_POWER
+    }
 
-    public static double INITIAL_ANGLE_LOWER = 90-36.7;
-    public static double INITIAL_ANGLE_HIGHER = 90-78.7;
-    public static double LOWER_ARM_LENGTH = 10;
-    public static double HIGHER_ARM_LENGTH = 7;
-    public static double LOWER_GEAR_RATIO = 100;
-    public static double HIGHER_GEAR_RATIO = 60;
-    public static double TICKS_PER_REVOLUTION = 28;
+    val KINEMATICS_DIVISOR_THRESHOLD: Double = .2
 
-    public static final boolean KEEP_PINCHER = false;
-
-    private final static FTCDashboardPackets dbp = new FTCDashboardPackets("ArmSubsystem");
-    Telemetry telemetry;
-
-    public EmergencyArmSubsystem(HardwareMap map, Telemetry telemetry) throws Exception {
-        this.telemetry = telemetry;
-        armMotorLower = RobotHardwareInitializer.MotorComponent.LOWER_ARM.getEx(map);
-        armMotorHigher = RobotHardwareInitializer.MotorComponent.HIGHER_ARM.getEx(map);
+    init {
         if (KEEP_PINCHER) {
-            pinchServo = RobotHardwareInitializer.ServoComponent.PINCHER.getEx(map);
-            wristServo = RobotHardwareInitializer.CRServoComponent.WRIST.get(map);
+            pinchServo = RobotHardwareInitializer.ServoComponent.PINCHER.getEx(map)
+            wristServo = RobotHardwareInitializer.CRServoComponent.WRIST[map]
         }
 
-        armMotorLower.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        armMotorHigher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        armMotorLower.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        armMotorHigher.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        armMotorLower.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        armMotorHigher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        haltLowerArm();
-        haltHigherArm();
+        armMotorLower.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        armMotorHigher.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        armMotorLower.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        armMotorHigher.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        armMotorLower.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        armMotorHigher.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        haltLowerArm()
+        haltHigherArm()
     }
-
-    /**
-     * @param power between [-1, 1]
-     */
-    public void setLowerArmPower(double power) {
-        armMotorLower.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        armMotorLower.setVelocity(power * LOWER_ARM_SPEED_PERCENT * LOWER_ARM_ANGLE_VELOCITY, AngleUnit.DEGREES);
-        if (Math.abs(power) < KINEMATICS_DIVISOR_THRESHOLD) {
-            armMotorLower.setVelocity(0, AngleUnit.DEGREES);
-            haltLowerArm();
-        }
-    }
-
-    /**
-     * @param power between [-1, 1]
-     */
-    public void setHigherArmPower(double power) {
-        armMotorHigher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        armMotorHigher.setVelocity(power * HIGHER_ARM_SPEED_PERCENT * HIGHER_ARM_ANGLE_VELOCITY, AngleUnit.DEGREES);
-        if (Math.abs(power) < KINEMATICS_DIVISOR_THRESHOLD) {
-            armMotorHigher.setPower(0);
-            armMotorHigher.setVelocity(0, AngleUnit.DEGREES);
-            haltHigherArm();
-        }
-    }
-
-    public void haltLowerArm() {
-        armMotorLower.setTargetPosition(armMotorLower.getCurrentPosition());
-        armMotorLower.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        armMotorLower.setPower(SET_POSITION_POWER);
-    }
-
-    public void haltHigherArm() {
-        armMotorHigher.setTargetPosition(armMotorHigher.getCurrentPosition());
-        armMotorHigher.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        armMotorHigher.setPower(SET_POSITION_POWER);
-    }
-
-    final double KINEMATICS_DIVISOR_THRESHOLD = .2f;
 
     /**
      * Keeps the arm at a constant x position.
      * @param angularVelocityLowerUngeared the angle to move the lower arm
      */
-    public void constantX(double angularVelocityLowerUngeared) {
+    fun constantX(angularVelocityLowerUngeared: Double) {
+        val thetaL = angleLower
+        val thetaH = angleHigher
 
-        double thetaL = getAngleLower();
-        double thetaH = getAngleHigher();
-
-        double angularVelocityHigherUngeared = -LOWER_ARM_LENGTH * Math.sin(Math.toRadians(thetaL)) * angularVelocityLowerUngeared;
-        double divisor = HIGHER_ARM_LENGTH * Math.sin(Math.toRadians(thetaH));
-
-        if (divisor < KINEMATICS_DIVISOR_THRESHOLD) {
-            armMotorHigher.setVelocity(0);
-            armMotorLower.setVelocity(0);
-            return;
-        }
-
-        angularVelocityHigherUngeared /= divisor;
-
-        if (Math.abs(angularVelocityHigherUngeared) > 180) {
-            // The angle is too big to keep x constant, and its too fast
-            armMotorHigher.setVelocity(0);
-            armMotorLower.setVelocity(0);
-            return;
-        }
-
-        double angularVelocityHigherGeared = getAngularVelocityHigher(angularVelocityHigherUngeared);
-        double angularVelocityLowerGeared = getAngularVelocityLower(angularVelocityLowerUngeared);
-        armMotorHigher.setVelocity(angularVelocityHigherGeared, AngleUnit.DEGREES);
-        armMotorLower.setVelocity(angularVelocityLowerGeared, AngleUnit.DEGREES);
-    }
-
-    public void constantY(double angularVelocityLowerUngeared) {
-
-        double thetaL = getAngleLower();
-        double thetaH = getAngleHigher();
-
-        double angularVelocityHigherUngeared = -LOWER_ARM_LENGTH * Math.cos(Math.toRadians(thetaL)) * angularVelocityLowerUngeared;
-        double divisor = HIGHER_ARM_LENGTH * Math.cos(Math.toRadians(thetaH));
+        var angularVelocityHigherUngeared =
+            -LOWER_ARM_LENGTH * sin(Math.toRadians(thetaL)) * angularVelocityLowerUngeared
+        val divisor = HIGHER_ARM_LENGTH * sin(Math.toRadians(thetaH))
 
         if (divisor < KINEMATICS_DIVISOR_THRESHOLD) {
-            armMotorHigher.setVelocity(0);
-            armMotorLower.setVelocity(0);
-            return;
+            armMotorHigher.velocity = 0.0
+            armMotorLower.velocity = 0.0
+            return
         }
 
-        angularVelocityHigherUngeared /= divisor;
+        angularVelocityHigherUngeared /= divisor
 
-        if (Math.abs(angularVelocityHigherUngeared) > 180) {
+        if (abs(angularVelocityHigherUngeared) > 180) {
             // The angle is too big to keep x constant, and its too fast
-            armMotorHigher.setVelocity(0);
-            armMotorLower.setVelocity(0);
-            return;
+            armMotorHigher.velocity = 0.0
+            armMotorLower.velocity = 0.0
+            return
         }
 
-        double angularVelocityHigherGeared = getAngularVelocityHigher(angularVelocityHigherUngeared);
-        double angularVelocityLowerGeared = getAngularVelocityLower(angularVelocityLowerUngeared);
-        armMotorHigher.setVelocity(angularVelocityHigherGeared, AngleUnit.DEGREES);
-        armMotorLower.setVelocity(angularVelocityLowerGeared, AngleUnit.DEGREES);
+        val angularVelocityHigherGeared = getAngularVelocityHigher(angularVelocityHigherUngeared)
+        val angularVelocityLowerGeared = getAngularVelocityLower(angularVelocityLowerUngeared)
+        armMotorHigher.setVelocity(angularVelocityHigherGeared, AngleUnit.DEGREES)
+        armMotorLower.setVelocity(angularVelocityLowerGeared, AngleUnit.DEGREES)
     }
 
-    public enum PinchState {
-        PINCHED(0), // left state
-        OPEN(0.5f), // middle state
-        ;
+    fun constantY(angularVelocityLowerUngeared: Double) {
+        val thetaL = angleLower
+        val thetaH = angleHigher
 
-        public final double pinchPosition;
-        PinchState(double pinchPosition) {
-            this.pinchPosition = pinchPosition;
+        var angularVelocityHigherUngeared =
+            -LOWER_ARM_LENGTH * cos(Math.toRadians(thetaL)) * angularVelocityLowerUngeared
+        val divisor = HIGHER_ARM_LENGTH * cos(Math.toRadians(thetaH))
+
+        if (divisor < KINEMATICS_DIVISOR_THRESHOLD) {
+            armMotorHigher.velocity = 0.0
+            armMotorLower.velocity = 0.0
+            return
         }
+
+        angularVelocityHigherUngeared /= divisor
+
+        if (abs(angularVelocityHigherUngeared) > 180) {
+            // The angle is too big to keep x constant, and its too fast
+            armMotorHigher.velocity = 0.0
+            armMotorLower.velocity = 0.0
+            return
+        }
+
+        val angularVelocityHigherGeared = getAngularVelocityHigher(angularVelocityHigherUngeared)
+        val angularVelocityLowerGeared = getAngularVelocityLower(angularVelocityLowerUngeared)
+        armMotorHigher.setVelocity(angularVelocityHigherGeared, AngleUnit.DEGREES)
+        armMotorLower.setVelocity(angularVelocityLowerGeared, AngleUnit.DEGREES)
     }
 
-    public void setPinchState(PinchState state) {
+    enum class PinchState(val pinchPosition: Double) {
+        PINCHED(0),  // left state
+        OPEN(0.5f),
+        // middle state
+    }
+
+    fun setPinchState(state: PinchState) {
         if (KEEP_PINCHER) {
-            Objects.requireNonNull(state);
-            pinchServo.setPosition(state.pinchPosition);
+            Objects.requireNonNull(state)
+            pinchServo!!.position = state.pinchPosition
         }
     }
 
-    public void closePincher() {
-        setPinchState(PinchState.PINCHED);
+    fun closePincher() {
+        setPinchState(PinchState.PINCHED)
     }
 
-    public void openPincher() {
-        setPinchState(PinchState.OPEN);
+    fun openPincher() {
+        setPinchState(PinchState.OPEN)
     }
 
     /**
      * @param power between [-1, 1]
      */
-    public void setWristPower(double power) {
+    fun setWristPower(power: Double) {
         if (KEEP_PINCHER) {
-            wristServo.setPower(power * WRIST_SPEED);
-            if (Math.abs(power) < KINEMATICS_DIVISOR_THRESHOLD) {
-                wristServo.setPower(0);
+            wristServo!!.power = power * WRIST_SPEED
+            if (abs(power) < KINEMATICS_DIVISOR_THRESHOLD) {
+                wristServo!!.power = 0.0
             }
         }
     }
 
-    /**
-     * @return angle of the lower motor relative to the front horizontal in degrees
-     */
-    public double getAngleLower() {
-        return encoderToAngleLower(armMotorLower.getCurrentPosition());
-    }
+    val angleLower: Double
+        /**
+         * @return angle of the lower motor relative to the front horizontal in degrees
+         */
+        get() = encoderToAngleLower(armMotorLower.currentPosition)
 
-    /**
-     * @return angle of the higher motor relative to the front horizontal in degrees
-     */
-    public double getAngleHigher() {
-        return encoderToAngleHigher(armMotorHigher.getCurrentPosition());
-    }
+    val angleHigher: Double
+        /**
+         * @return angle of the higher motor relative to the front horizontal in degrees
+         */
+        get() = encoderToAngleHigher(armMotorHigher.currentPosition)
 
-    public double encoderToAngleLower(int encoderPosition) {
-        double calculatedAngle = encoderPosition;
-        calculatedAngle *= 360f;
-        calculatedAngle /= LOWER_GEAR_RATIO * TICKS_PER_REVOLUTION;
+    fun encoderToAngleLower(encoderPosition: Int): Double {
+        var calculatedAngle = encoderPosition.toDouble()
+        calculatedAngle *= 360.0
+        calculatedAngle /= LOWER_GEAR_RATIO * TICKS_PER_REVOLUTION
         //calculatedAngle = (((float) encoderPosition) * 360f) / (LOWER_GEAR_RATIO * armMotorLower.getMotorType().getTicksPerRev());
-        return calculatedAngle + INITIAL_ANGLE_LOWER;
+        return calculatedAngle + INITIAL_ANGLE_LOWER
     }
 
-    public double encoderToAngleHigher(int encoderPosition) {
-        double calculatedAngle = encoderPosition;
-        calculatedAngle *= 360f;
-        calculatedAngle /= HIGHER_GEAR_RATIO * TICKS_PER_REVOLUTION;
-        return calculatedAngle + INITIAL_ANGLE_HIGHER;
+    fun encoderToAngleHigher(encoderPosition: Int): Double {
+        var calculatedAngle = encoderPosition.toDouble()
+        calculatedAngle *= 360.0
+        calculatedAngle /= HIGHER_GEAR_RATIO * TICKS_PER_REVOLUTION
+        return calculatedAngle + INITIAL_ANGLE_HIGHER
     }
 
-    public int angleToEncoderPositionLower(double angle) {
-        angle *= TICKS_PER_REVOLUTION * LOWER_GEAR_RATIO;
-        angle /= 360f;
-        return (int) angle;
+    fun angleToEncoderPositionLower(angle: Double): Int {
+        var angle = angle
+        angle *= TICKS_PER_REVOLUTION * LOWER_GEAR_RATIO
+        angle /= 360.0
+        return angle.toInt()
     }
 
-    public int angleToEncoderPositionHigher(double angle) {
-        angle *= TICKS_PER_REVOLUTION * HIGHER_GEAR_RATIO;
-        angle /= 360f;
-        return (int) angle;
-    }
-
-    /**
-     * Scales the given angle by the gear ratio
-     */
-    public double getAngularVelocityLower(double angle) {
-        return angle * LOWER_GEAR_RATIO;
+    fun angleToEncoderPositionHigher(angle: Double): Int {
+        var angle = angle
+        angle *= TICKS_PER_REVOLUTION * HIGHER_GEAR_RATIO
+        angle /= 360.0
+        return angle.toInt()
     }
 
     /**
      * Scales the given angle by the gear ratio
      */
-    public double getAngularVelocityHigher(double angle) {
-        return angle * HIGHER_GEAR_RATIO;
+    fun getAngularVelocityLower(angle: Double): Double {
+        return angle * LOWER_GEAR_RATIO
     }
 
-    public void moveToAngleLower(double angle) {
-        armMotorLower.setTargetPosition(angleToEncoderPositionLower(angle));
-        armMotorLower.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        armMotorLower.setPower(SET_POSITION_POWER);
+    /**
+     * Scales the given angle by the gear ratio
+     */
+    fun getAngularVelocityHigher(angle: Double): Double {
+        return angle * HIGHER_GEAR_RATIO
     }
 
-    public void moveToAngleHigher(double angle) {
-        armMotorHigher.setTargetPosition(angleToEncoderPositionHigher(angle));
-        armMotorHigher.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        armMotorHigher.setPower(SET_POSITION_POWER);
+    fun moveToAngleLower(angle: Double) {
+        armMotorLower.targetPosition = angleToEncoderPositionLower(angle)
+        armMotorLower.mode = DcMotor.RunMode.RUN_TO_POSITION
+        armMotorLower.power = SET_POSITION_POWER
     }
 
-    @Override
-    public void periodic() {
-        super.periodic();
+    fun moveToAngleHigher(angle: Double) {
+        armMotorHigher.targetPosition = angleToEncoderPositionHigher(angle)
+        armMotorHigher.mode = DcMotor.RunMode.RUN_TO_POSITION
+        armMotorHigher.power = SET_POSITION_POWER
+    }
+
+    override fun periodic() {
+        super.periodic()
         //dbp.info("Current position: "+armMotorLower.getCurrentPosition()+", "+armMotorLower.getTargetPosition()+"\n"+armMotorHigher.getCurrentPosition()+", "+armMotorHigher.getTargetPosition());
-        dbp.info("Lower angle: "+getAngleLower()+"\nRight angle: "+getAngleHigher());
-        dbp.send(true);
-        telemetry.addData("Arm Angle", "Angle lower: "+getAngleLower()+"\nAngle higher"+getAngleHigher());
-        telemetry.update();
+        dbp.info(
+            """
+                Lower angle: ${angleLower}
+                Right angle: ${angleHigher}
+                """.trimIndent()
+        )
+        dbp.send(true)
+        telemetry.addData(
+            "Arm Angle", """
+     Angle lower: ${angleLower}
+     Angle higher${angleHigher}
+     """.trimIndent()
+        )
+        telemetry.update()
+    }
+
+    companion object {
+        const val THRESHOLD: Double = .5
+
+        var WRIST_SPEED: Double = 1.0
+        var LOWER_ARM_SPEED_PERCENT: Double = 1.0
+        var HIGHER_ARM_SPEED_PERCENT: Double = 1.0
+        var SET_POSITION_POWER: Double = .55
+
+        var LOWER_ARM_ANGLE_VELOCITY: Double = 250.0
+        var HIGHER_ARM_ANGLE_VELOCITY: Double = 250.0
+
+        var INITIAL_ANGLE_LOWER: Double = 90 - 36.7
+        var INITIAL_ANGLE_HIGHER: Double = 90 - 78.7
+        var LOWER_ARM_LENGTH: Double = 10.0
+        var HIGHER_ARM_LENGTH: Double = 7.0
+        var LOWER_GEAR_RATIO: Double = 100.0
+        var HIGHER_GEAR_RATIO: Double = 60.0
+        var TICKS_PER_REVOLUTION: Double = 28.0
+
+        const val KEEP_PINCHER: Boolean = false
+
+        private val dbp = FTCDashboardPackets("ArmSubsystem")
     }
 }

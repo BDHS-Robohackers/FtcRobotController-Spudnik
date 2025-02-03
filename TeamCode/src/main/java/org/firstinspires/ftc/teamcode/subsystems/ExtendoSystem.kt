@@ -1,37 +1,37 @@
-package org.firstinspires.ftc.teamcode.subsystems;
+package org.firstinspires.ftc.teamcode.subsystems
 
-import com.arcrobotics.ftclib.command.SubsystemBase;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.arcrobotics.ftclib.command.SubsystemBase
+import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets
+import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer
+import java.util.Objects
 
-import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
-import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer;
-import org.jetbrains.annotations.NotNull;
+class ExtendoSystem(hardwareMap: HardwareMap) : SubsystemBase() {
+    val motor: DcMotorEx =
+        RobotHardwareInitializer.MotorComponent.EXTENSION_VIPER.getEx(hardwareMap) /*, reverseMotor*/
 
-import java.util.Objects;
-
-public class ExtendoSystem extends SubsystemBase {
-
-    final DcMotorEx motor/*, reverseMotor*/;
-    private final static FTCDashboardPackets dbp = new FTCDashboardPackets("ExtendoSubsystem");
-    public ExtendoSystem(HardwareMap hardwareMap) throws Exception {
-        this.motor = RobotHardwareInitializer.MotorComponent.EXTENSION_VIPER.getEx(hardwareMap);
+    init {
         //this.reverseMotor = reverseMotor;
     }
 
-    public enum Direction {
+    enum class Direction {
         OUTWARD,
         INWARD,
         NONE
     }
 
-    public void setDirection(@NotNull Direction direction) {
-        Objects.requireNonNull(direction);
-        double power = (direction == Direction.OUTWARD ? 1 : 0) - (direction == Direction.INWARD ? 1 : 0);
-        motor.setPower(power);
+    fun setDirection(direction: Direction) {
+        Objects.requireNonNull(direction)
+        val power =
+            ((if (direction == Direction.OUTWARD) 1 else 0) - (if (direction == Direction.INWARD) 1 else 0)).toDouble()
+        motor.power = power
         //reverseMotor.setPower(-power);
-        dbp.info("Direction: "+direction);
-        dbp.send(true);
+        dbp.info("Direction: $direction")
+        dbp.send(true)
     }
 
+    companion object {
+        private val dbp = FTCDashboardPackets("ExtendoSubsystem")
+    }
 }

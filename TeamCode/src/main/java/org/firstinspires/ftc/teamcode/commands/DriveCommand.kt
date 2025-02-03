@@ -1,32 +1,33 @@
-package org.firstinspires.ftc.teamcode.commands;
+package org.firstinspires.ftc.teamcode.commands
 
-import com.arcrobotics.ftclib.command.CommandBase;
-import com.qualcomm.robotcore.hardware.Gamepad;
+import com.arcrobotics.ftclib.command.CommandBase
+import org.firstinspires.ftc.teamcode.subsystems.DriveSubsystem
 
-import org.firstinspires.ftc.teamcode.subsystems.DriveSubsystem;
+class DriveCommand(
+    subsystem: DriveSubsystem, forwardBackward: Double,
+    leftRight: Double, rotation: Double
+) : CommandBase() {
+    private val forwardBackward = 0.0
+    private val leftRight = 0.0
+    private val rotation = 0.0
+    private val m_drive: DriveSubsystem
 
-import java.util.function.DoubleSupplier;
-
-public class DriveCommand extends CommandBase {
-    private double forwardBackward, leftRight, rotation;
-    private final DriveSubsystem m_drive;
-
-    public DriveCommand(DriveSubsystem subsystem, double forwardBackward,
-                        double leftRight, double rotation) {
-        m_drive = subsystem;
-        forwardBackward = forwardBackward;
-        leftRight = leftRight;
-        rotation = rotation;
-        addRequirements(subsystem);
+    init {
+        var forwardBackward = forwardBackward
+        var leftRight = leftRight
+        var rotation = rotation
+        m_drive = subsystem
+        forwardBackward = forwardBackward
+        leftRight = leftRight
+        rotation = rotation
+        addRequirements(subsystem)
     }
 
-    @Override
-    public void execute() {
-        m_drive.moveRobotMecanum(forwardBackward, leftRight, rotation);
+    override fun execute() {
+        m_drive.moveRobotMecanum(forwardBackward, leftRight, rotation)
     }
 
-    @Override
-    public boolean isFinished() {
-        return true;
+    override fun isFinished(): Boolean {
+        return true
     }
 }

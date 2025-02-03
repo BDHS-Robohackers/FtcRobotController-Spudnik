@@ -1,30 +1,26 @@
-package org.firstinspires.ftc.teamcode.messages;
+package org.firstinspires.ftc.teamcode.messages
 
-import com.acmerobotics.roadrunner.ftc.PositionVelocityPair;
+import com.acmerobotics.roadrunner.ftc.PositionVelocityPair
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+class MecanumLocalizerInputsMessage(
+    var leftFront: PositionVelocityPair,
+    var leftBack: PositionVelocityPair,
+    var rightBack: PositionVelocityPair,
+    var rightFront: PositionVelocityPair,
+    angles: YawPitchRollAngles
+) {
+    var timestamp: Long = System.nanoTime()
+    var yaw: Double = 0.0
+    var pitch: Double = 0.0
+    var roll: Double = 0.0
 
-public final class MecanumLocalizerInputsMessage {
-    public long timestamp;
-    public PositionVelocityPair leftFront;
-    public PositionVelocityPair leftBack;
-    public PositionVelocityPair rightBack;
-    public PositionVelocityPair rightFront;
-    public double yaw;
-    public double pitch;
-    public double roll;
-
-    public MecanumLocalizerInputsMessage(PositionVelocityPair leftFront, PositionVelocityPair leftBack, PositionVelocityPair rightBack, PositionVelocityPair rightFront, YawPitchRollAngles angles) {
-        this.timestamp = System.nanoTime();
-        this.leftFront = leftFront;
-        this.leftBack = leftBack;
-        this.rightBack = rightBack;
-        this.rightFront = rightFront;
-        {
-            this.yaw = angles.getYaw(AngleUnit.RADIANS);
-            this.pitch = angles.getPitch(AngleUnit.RADIANS);
-            this.roll = angles.getRoll(AngleUnit.RADIANS);
+    init {
+        run {
+            this.yaw = angles.getYaw(AngleUnit.RADIANS)
+            this.pitch = angles.getPitch(AngleUnit.RADIANS)
+            this.roll = angles.getRoll(AngleUnit.RADIANS)
         }
     }
 }

@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat
 apply plugin: 'com.android.library'
 
 android {
+    android.buildFeatures.buildConfig true
 
     defaultConfig {
         minSdkVersion 24

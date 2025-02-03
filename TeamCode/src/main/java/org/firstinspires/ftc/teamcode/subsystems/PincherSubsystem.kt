@@ -1,55 +1,32 @@
-package org.firstinspires.ftc.teamcode.subsystems;
+package org.firstinspires.ftc.teamcode.subsystems
 
-import android.annotation.SuppressLint;
+import android.annotation.SuppressLint
+import com.arcrobotics.ftclib.command.SubsystemBase
+import com.arcrobotics.ftclib.hardware.ServoEx
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets
+import org.firstinspires.ftc.teamcode.util.MatchRecorder.MatchLogger
+import java.util.Objects
 
-import com.arcrobotics.ftclib.command.SubsystemBase;
-import com.arcrobotics.ftclib.hardware.ServoEx;
+@Deprecated("")
+class PincherSubsystem(var finger1: ServoEx, var finger2: ServoEx) : SubsystemBase() {
+    private val dbp = FTCDashboardPackets("FingerSubsystem")
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
-import org.firstinspires.ftc.teamcode.util.MatchRecorder.MatchLogger;
-
-import java.util.Objects;
-
-@Deprecated
-public class PincherSubsystem extends SubsystemBase {
-
-    ServoEx finger1, finger2;
-    private final FTCDashboardPackets dbp = new FTCDashboardPackets("FingerSubsystem");
-
-    public static float MAX_ANGLE = 5 / 2f;
-
-    public enum FingerPositions {
+    enum class FingerPositions(val angle: Float, val angleUnit: AngleUnit) {
         ZERO(0, AngleUnit.DEGREES),
-        OPEN(MAX_ANGLE/2f, AngleUnit.DEGREES),
-        CLOSED(MAX_ANGLE, AngleUnit.DEGREES);
-
-        private final float angle;
-        private final AngleUnit angleUnit;
-
-        FingerPositions(float angle, AngleUnit angleUnit) {
-            this.angle = angle;
-            this.angleUnit = angleUnit;
-        }
-
-        public float getAngle() {
-            return angle;
-        }
-
-        public AngleUnit getAngleUnit() {
-            return angleUnit;
-        }
+        OPEN(MAX_ANGLE / 2f, AngleUnit.DEGREES),
+        CLOSED(MAX_ANGLE, AngleUnit.DEGREES)
     }
 
-    public FingerPositions currentFingerPosition;
+    var currentFingerPosition: FingerPositions? = null
 
-    public PincherSubsystem(final ServoEx finger1, final ServoEx finger2) {
-        this.finger1 = finger1;
-        this.finger2 = finger2;
-        Objects.requireNonNull(finger1);
-        Objects.requireNonNull(finger2);
-        finger1.setRange(0, MAX_ANGLE, AngleUnit.DEGREES);
-        finger2.setRange(0, MAX_ANGLE, AngleUnit.DEGREES);
+    var lastPower: Double = Double.MIN_VALUE
+
+    init {
+        Objects.requireNonNull(finger1)
+        Objects.requireNonNull(finger2)
+        finger1.setRange(0.0, MAX_ANGLE.toDouble(), AngleUnit.DEGREES)
+        finger2.setRange(0.0, MAX_ANGLE.toDouble(), AngleUnit.DEGREES)
 
         //finger1.setInverted(true); //  Might need to change it to finger2
         //finger1.setInverted(true); //  Might need to change it to finger1
@@ -57,49 +34,58 @@ public class PincherSubsystem extends SubsystemBase {
         //locomoteFinger(FingerPositions.ZERO);
     }
 
-    double lastPower = Double.MIN_VALUE;
-
     @SuppressLint("DefaultLocale")
-    public void locomoteFinger(FingerPositions position) {
+    fun locomoteFinger(position: FingerPositions) {
         //finger1.turnToAngle(position.getAngle(), position.getAngleUnit());
         //finger2.turnToAngle(position.getAngle(), position.getAngleUnit());
 
-        double angleScale = position.getAngle() / MAX_ANGLE;
+        val angleScale = (position.angle / MAX_ANGLE).toDouble()
 
         //finger1.setPosition(1f-angleScale);
         //finger2.setPosition(angleScale);
-        finger1.turnToAngle((MAX_ANGLE-position.getAngle())/3f, position.getAngleUnit());
-        finger2.turnToAngle((position.getAngle())/3f, position.getAngleUnit());
+        finger1.turnToAngle(
+            ((MAX_ANGLE - position.angle) / 3f).toDouble(),
+            position.angleUnit
+        )
+        finger2.turnToAngle(((position.angle) / 3f).toDouble(), position.angleUnit)
         //dbp.info("ANGLE: "+angleScale);
         //dbp.info("POSITION: "+finger1.getPosition()+ ", "+finger2.getPosition());
         //dbp.info("OBJECT: "+finger1+ ", "+finger2);
-        String debug = "Angle: %f\nTargetPos: %f\nPosition: %f\nPositionName: %s";
-        debug = String.format(debug, position.getAngle(), angleScale, finger1.getPosition(), position.name());
-        dbp.info(debug);
-        dbp.send(true);
+        var debug = "Angle: %f\nTargetPos: %f\nPosition: %f\nPositionName: %s"
+        debug = String.format(
+            debug,
+            position.angle, angleScale, finger1.position, position.name
+        )
+        dbp.info(debug)
+        dbp.send(true)
 
-        currentFingerPosition = position;
-        MatchLogger.getInstance().genericLog("Finger", MatchLogger.FileType.FINGER, position.name());
+        currentFingerPosition = position
+        MatchLogger.getInstance().genericLog("Finger", MatchLogger.FileType.FINGER, position.name)
     }
 
-    public void closeFinger() {
-        locomoteFinger(FingerPositions.CLOSED);
+    fun closeFinger() {
+        locomoteFinger(FingerPositions.CLOSED)
     }
 
-    public void openFinger() {
-        locomoteFinger(FingerPositions.OPEN);
+    fun openFinger() {
+        locomoteFinger(FingerPositions.OPEN)
     }
 
-    public void zeroFinger() {
-        locomoteFinger(FingerPositions.ZERO);
+    fun zeroFinger() {
+        locomoteFinger(FingerPositions.ZERO)
     }
 
-    public boolean isFingerReady() {
-        if (currentFingerPosition == null) {
-            return false;
+    val isFingerReady: Boolean
+        get() {
+            if (currentFingerPosition == null) {
+                return false
+            }
+            val angleScale =
+                (currentFingerPosition!!.angle / MAX_ANGLE).toDouble()
+            return ((finger1.angle == 1f - angleScale) && (finger2.angle == angleScale))
         }
-        double angleScale = currentFingerPosition.getAngle() / MAX_ANGLE;
-        return ((finger1.getAngle() == 1f-angleScale) && (finger2.getAngle() == angleScale));
-    }
 
+    companion object {
+        var MAX_ANGLE: Float = 5 / 2f
+    }
 }

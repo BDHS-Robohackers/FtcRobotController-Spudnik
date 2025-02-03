@@ -1,72 +1,63 @@
-package org.firstinspires.ftc.teamcode.subsystems;
+package org.firstinspires.ftc.teamcode.subsystems
 
-import com.acmerobotics.roadrunner.Pose2d;
-import com.arcrobotics.ftclib.command.SubsystemBase;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.acmerobotics.roadrunner.Pose2d
+import com.arcrobotics.ftclib.command.SubsystemBase
+import com.qualcomm.robotcore.hardware.DistanceSensor
+import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer.DistanceSensorComponent
+import kotlin.math.abs
 
-import static org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer.DistanceSensorComponent;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
-public class AutoUtilitySubsystem extends SubsystemBase {
-    final DistanceSensor LEFT, CENTER, RIGHT;
-    final double TARGET = 1;
-    final DistanceUnit UNIT = DistanceUnit.CM;
-
-
-    double error = 0;
-    double distance;
-
-    private double DL = 0;
-    private double DR = 0;
-    private double DC = 0;
-
-    public Pose2d robotPose;
+class AutoUtilitySubsystem(hardwareMap: HardwareMap) : SubsystemBase() {
+    val LEFT: DistanceSensor = DistanceSensorComponent.LEFT_SENSOR[hardwareMap]
+    val CENTER: DistanceSensor = DistanceSensorComponent.CENTER_SENSOR[hardwareMap]
+    val RIGHT: DistanceSensor = DistanceSensorComponent.RIGHT_SENSOR[hardwareMap]
+    val TARGET: Double = 1.0
+    val UNIT: DistanceUnit = DistanceUnit.CM
 
 
-    public AutoUtilitySubsystem(HardwareMap hardwareMap) {
-        LEFT = DistanceSensorComponent.LEFT_SENSOR.get(hardwareMap);
-        CENTER = DistanceSensorComponent.CENTER_SENSOR.get(hardwareMap);
-        RIGHT = DistanceSensorComponent.RIGHT_SENSOR.get(hardwareMap);
+    var error: Double = 0.0
+    var distance: Double = 0.0
+
+    private var DL = 0.0
+    private var DR = 0.0
+    private var DC = 0.0
+
+    var robotPose: Pose2d? = null
+
+    fun setRobotPose(pose: Pose2d?) {
+        robotPose = pose
     }
 
-    public void setRobotPose(final Pose2d pose) {
-        robotPose = pose;
-    }
-
-    @Override
-    public void periodic() {
-        DR = RIGHT.getDistance(UNIT);
-        DL = LEFT.getDistance(UNIT);
-        DC = CENTER.getDistance(UNIT);
-        if (Math.abs(error) > TARGET) {
-            error = DL - DR;
+    override fun periodic() {
+        DR = RIGHT.getDistance(UNIT)
+        DL = LEFT.getDistance(UNIT)
+        DC = CENTER.getDistance(UNIT)
+        if (abs(error) > TARGET) {
+            error = DL - DR
             if (error > 0) {
-                turnRight();
+                turnRight()
             } else if (error < 0) {
-                turnLeft();
+                turnLeft()
             }
         } else if ((((DL + DR) / 2) > (DC + 1)) || ((DL + DR) / 2) < (DC - 1)) {
             if (((DL + DR) / 2) > DC) {
-                driveForward();
+                driveForward()
             } else if (((DL + DR) / 2) < DC) {
-                driveBackward();
+                driveBackward()
             }
         }
-
     }
 
-    public void turnRight() {
-
+    fun turnRight() {
     }
-    public void turnLeft() {
 
+    fun turnLeft() {
     }
-    public void driveForward() {
 
+    fun driveForward() {
     }
-    public void driveBackward() {
 
+    fun driveBackward() {
     }
 }

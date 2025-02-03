@@ -1,43 +1,37 @@
-package org.firstinspires.ftc.teamcode.subsystems;
+package org.firstinspires.ftc.teamcode.subsystems
 
-import com.arcrobotics.ftclib.command.SubsystemBase;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.arcrobotics.ftclib.command.SubsystemBase
+import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets
+import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer
 
-import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
-import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer;
+@Deprecated("")
+class HangSubsystem(hardwareMap: HardwareMap) : SubsystemBase() {
+    val extensionMotor: DcMotor? = RobotHardwareInitializer.MotorComponent.HANG_MOTOR[hardwareMap]
+    private val dbp = FTCDashboardPackets("Hang Subsystem")
 
-@Deprecated
-public class HangSubsystem extends SubsystemBase {
-
-    final DcMotor extensionMotor;
-    private final FTCDashboardPackets dbp = new FTCDashboardPackets("Hang Subsystem");
-
-    public HangSubsystem(HardwareMap hardwareMap) {
-        this.extensionMotor = RobotHardwareInitializer.MotorComponent.HANG_MOTOR.get(hardwareMap);
-    }
-
-    public void setHangDirection(HangDirection direction) {
+    fun setHangDirection(direction: HangDirection) {
         if (extensionMotor == null) {
-            return;
+            return
         }
 
-        extensionMotor.setPower(direction == HangDirection.IDLE ? 0 : 1);
+        extensionMotor.power = (if (direction == HangDirection.IDLE) 0 else 1).toDouble()
         // TODO: Verify if the Direction.FORWARD and REVERSE is correct (may need to reverse it)
-        DcMotorSimple.Direction motorDirection = direction == HangDirection.DOWN ? DcMotorSimple.Direction.FORWARD : DcMotorSimple.Direction.REVERSE;
-        extensionMotor.setDirection(motorDirection);
+        val motorDirection =
+            if (direction == HangDirection.DOWN) DcMotorSimple.Direction.FORWARD else DcMotorSimple.Direction.REVERSE
+        extensionMotor.direction = motorDirection
 
-        dbp.createNewTelePacket();
-        dbp.info(String.format("Hang Direction: %s", direction.toString()));
-        dbp.send(false);
+        dbp.createNewTelePacket()
+        dbp.info(String.format("Hang Direction: %s", direction.toString()))
+        dbp.send(false)
     }
 
     // Used to determine whether the motor will go up, down, or remain idle
-    public enum HangDirection {
+    enum class HangDirection {
         UP,
         DOWN,
-        IDLE;
+        IDLE
     }
-
 }

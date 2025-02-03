@@ -1,104 +1,75 @@
-package org.firstinspires.ftc.teamcode.subsystems;
+package org.firstinspires.ftc.teamcode.subsystems
 
-import static org.firstinspires.ftc.teamcode.util.RandomUtils.withinThreshold;
-
-import com.acmerobotics.dashboard.config.Config;
-import com.arcrobotics.ftclib.command.SubsystemBase;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-
-import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
-import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer;
+import com.acmerobotics.dashboard.config.Config
+import com.arcrobotics.ftclib.command.SubsystemBase
+import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets
+import org.firstinspires.ftc.teamcode.util.RandomUtils
+import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer
 
 @Config
-public class UppieTwoSubsystem extends SubsystemBase {
-    private final DcMotorEx viper;
+class UppieTwoSubsystem : SubsystemBase {
+    private val viper: DcMotorEx
+
     //private final DcMotorEx viperRight;
+    var lastStateChange: Long = 0
 
-    long lastStateChange = 0;
+    private val dbp = FTCDashboardPackets("UppieTwoSubsystem")
 
-    private final FTCDashboardPackets dbp = new FTCDashboardPackets("UppieTwoSubsystem");
+    private var currentState = UppieState.IDLE
 
-    //public static int PICK_UP_ENCODER_HEIGHT = -350, HOOK_ENCODER_HEIGHT = -2182, ATTACH_ENCODER_HEIGHT = -1705;
-    public static int DOWNWARD_SHIFT = 30;
-    public static int PICK_UP_ENCODER_HEIGHT = DOWNWARD_SHIFT-340, HOOK_ENCODER_HEIGHT = DOWNWARD_SHIFT-2182, ATTACH_ENCODER_HEIGHT = DOWNWARD_SHIFT-1695;
-    public static double MAX_POWER = .75f;
-    public static double MAX_RTP_POWER = .9f;
-    public static boolean KEEP_POS = true;
-
-    /**
-     * The max differential allowed between the two motor's encoder positions.
-     */
-    static int MAX_DIFFERENTIAL_BETWEEN_MOTORS = 10;
-    static int TARGET_THRESHOLD = 5;
-
-    private UppieState currentState = UppieState.IDLE;
-
-    public enum UppieState {
+    enum class UppieState(val encoderPos: Int) {
         MAX(-4311),
         PICK_UP(PICK_UP_ENCODER_HEIGHT),
         HOOK(HOOK_ENCODER_HEIGHT),
         ATTACH(ATTACH_ENCODER_HEIGHT),
         MIN(0),
-        IDLE(0);
-
-        private final int encoderPos;
-
-        UppieState(final int encoderPos) {
-            this.encoderPos = encoderPos;
-        }
-
-        public int getEncoderPos() {
-            return encoderPos;
-        }
+        IDLE(0)
     }
 
-    public UppieTwoSubsystem(final DcMotorEx viperLeft) {
-        this(viperLeft, true);
+    @JvmOverloads
+    constructor(viperLeft: DcMotorEx, resetMotorEncoder: Boolean = true) {
+        this.viper = viperLeft
+        if (resetMotorEncoder) viper.mode =
+            DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        viper.mode = DcMotor.RunMode.RUN_USING_ENCODER
     }
 
-    public UppieTwoSubsystem(final DcMotorEx viperLeft, boolean resetMotorEncoder) {
-        this.viper = viperLeft;
-        if (resetMotorEncoder)
-            this.viper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        this.viper.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    @JvmOverloads
+    constructor(map: HardwareMap, resetMotorEncoder: Boolean = true) {
+        this.viper = RobotHardwareInitializer.MotorComponent.UPPIES.getEx(map)
+        checkNotNull(this.viper)
+        if (resetMotorEncoder) viper.mode =
+            DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        viper.mode = DcMotor.RunMode.RUN_USING_ENCODER
     }
 
-    public UppieTwoSubsystem(final HardwareMap map) throws Exception {
-        this(map, true);
+    val isIdle: Boolean
+        get() = currentState == UppieState.IDLE
+
+    fun resetMotorEncoders() {
+        viper.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        haltMotors()
     }
 
-    public UppieTwoSubsystem(final HardwareMap map, boolean resetMotorEncoder) throws Exception {
-        this.viper = RobotHardwareInitializer.MotorComponent.UPPIES.getEx(map);
-        assert this.viper != null;
-        if (resetMotorEncoder)
-            this.viper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        this.viper.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
+    override fun periodic() {
+        super.periodic()
+        if (currentState == UppieState.IDLE) return
 
-    public boolean isIdle() {
-        return currentState.equals(UppieState.IDLE);
-    }
-
-    public void resetMotorEncoders() {
-        viper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        haltMotors();
-    }
-
-    @Override
-    public void periodic() {
-        super.periodic();
-        if (currentState == UppieState.IDLE)
-            return;
-
-        int currentPosition = viper.getCurrentPosition();
-        dbp.info("Uppies Position: " + currentPosition);
-        dbp.send(true);
+        val currentPosition = viper.currentPosition
+        dbp.info("Uppies Position: $currentPosition")
+        dbp.send(true)
 
 
-        if (currentState != UppieState.IDLE && withinThreshold(viper.getCurrentPosition(), viper.getTargetPosition(), 10)) {
-            setUppieState(UppieState.IDLE);
+        if (currentState != UppieState.IDLE && RandomUtils.withinThreshold(
+                viper.currentPosition,
+                viper.targetPosition,
+                10
+            )
+        ) {
+            setUppieState(UppieState.IDLE)
         }
 
         /*if (!EMERGENCY_OVERRIDE && currentState == UppieState.MAX && currentPosition <= MAX_ENCODER_POS) {
@@ -126,82 +97,91 @@ public class UppieTwoSubsystem extends SubsystemBase {
         }*/
     }
 
-    public void setUppieState(UppieState state) {
-        dbp.info("Updating state to: " + state);
-        dbp.send(true);
-        UppieState lastState = this.currentState;
-        this.currentState = state;
+    fun setUppieState(state: UppieState) {
+        dbp.info("Updating state to: $state")
+        dbp.send(true)
+        val lastState = this.currentState
+        this.currentState = state
 
-        if (state == UppieState.MIN)
-            setPower(-1);
-        else if (state == UppieState.MAX)
-            setPower(1);
+        if (state == UppieState.MIN) setPower(-1f)
+        else if (state == UppieState.MAX) setPower(1f)
         else if (state == UppieState.IDLE) {
-            haltMotors();
-        }
-        else if (state == UppieState.HOOK || state == UppieState.PICK_UP || state == UppieState.ATTACH) {
-            viper.setTargetPosition(state.getEncoderPos());
-            setUsingPositionMode();
-            viper.setPower(0.8);
+            haltMotors()
+        } else if (state == UppieState.HOOK || state == UppieState.PICK_UP || state == UppieState.ATTACH) {
+            viper.targetPosition = state.encoderPos
+            setUsingPositionMode()
+            viper.power = 0.8
         }
 
         // If the state changed, reset the timer. Allows for this method to be called periodically/every update.
         if (lastState != this.currentState) {
-            lastStateChange = System.currentTimeMillis();
+            lastStateChange = System.currentTimeMillis()
         }
-        dbp.info("CURRENT POSITION: " + viper.getCurrentPosition());
-        dbp.send(true);
+        dbp.info("CURRENT POSITION: " + viper.currentPosition)
+        dbp.send(true)
     }
 
-    public void setPower(final float power) {
+    fun setPower(power: Float) {
         /*if (!heightDifferenceWithinThreshold()) {
             haltMotors();
             return;
         }*/
 
-        setUsingEncoderMode();
+        setUsingEncoderMode()
 
-        double CLAMPED_POWER = power;
+        var CLAMPED_POWER = power.toDouble()
 
-        if (power > MAX_POWER)
-            CLAMPED_POWER = MAX_POWER;
-        else if (power < -MAX_POWER)
-            CLAMPED_POWER = -MAX_POWER;
+        if (power > MAX_POWER) CLAMPED_POWER = MAX_POWER
+        else if (power < -MAX_POWER) CLAMPED_POWER = -MAX_POWER
 
-        this.viper.setPower(CLAMPED_POWER);
+        viper.power = CLAMPED_POWER
     }
 
-    public void holdMotorPosition() {
-        if (this.viper.getMode() == DcMotor.RunMode.RUN_TO_POSITION)
-            return;
-        this.viper.setTargetPosition(this.viper.getCurrentPosition());
-        this.viper.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    fun holdMotorPosition() {
+        if (viper.mode == DcMotor.RunMode.RUN_TO_POSITION) return
+        viper.targetPosition = viper.currentPosition
+        viper.mode = DcMotor.RunMode.RUN_TO_POSITION
 
-        this.viper.setPower(MAX_RTP_POWER);
+        viper.power = MAX_RTP_POWER
     }
 
-    public void setUsingEncoderMode() {
-        if (this.viper.getMode() == DcMotor.RunMode.RUN_USING_ENCODER)
-            return;
+    fun setUsingEncoderMode() {
+        if (viper.mode == DcMotor.RunMode.RUN_USING_ENCODER) return
 
-        this.viper.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        viper.mode = DcMotor.RunMode.RUN_USING_ENCODER
         // this.viper.setPower(0);
     }
-    public void setUsingPositionMode() {
-        if (this.viper.getMode() == DcMotor.RunMode.RUN_TO_POSITION)
-            return;
 
-        this.viper.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    fun setUsingPositionMode() {
+        if (viper.mode == DcMotor.RunMode.RUN_TO_POSITION) return
+
+        viper.mode = DcMotor.RunMode.RUN_TO_POSITION
     }
 
-    public void haltMotors() {
-        if (viper.getPower() == 0)
-            return;
+    fun haltMotors() {
+        if (viper.power == 0.0) return
         if (KEEP_POS) {
-            holdMotorPosition();
-            return;
+            holdMotorPosition()
+            return
         }
-        dbp.info("Halting Motors!", true);
-        this.viper.setPower(0);
+        dbp.info("Halting Motors!", true)
+        viper.power = 0.0
+    }
+
+    companion object {
+        //public static int PICK_UP_ENCODER_HEIGHT = -350, HOOK_ENCODER_HEIGHT = -2182, ATTACH_ENCODER_HEIGHT = -1705;
+        var DOWNWARD_SHIFT: Int = 30
+        var PICK_UP_ENCODER_HEIGHT: Int = DOWNWARD_SHIFT - 340
+        var HOOK_ENCODER_HEIGHT: Int = DOWNWARD_SHIFT - 2182
+        var ATTACH_ENCODER_HEIGHT: Int = DOWNWARD_SHIFT - 1695
+        var MAX_POWER: Double = .75
+        var MAX_RTP_POWER: Double = .9
+        var KEEP_POS: Boolean = true
+
+        /**
+         * The max differential allowed between the two motor's encoder positions.
+         */
+        var MAX_DIFFERENTIAL_BETWEEN_MOTORS: Int = 10
+        var TARGET_THRESHOLD: Int = 5
     }
 }

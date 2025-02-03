@@ -1,17 +1,12 @@
-package org.firstinspires.ftc.teamcode.messages;
+package org.firstinspires.ftc.teamcode.messages
 
-import com.acmerobotics.roadrunner.ftc.PositionVelocityPair;
+import com.acmerobotics.roadrunner.ftc.PositionVelocityPair
 
-import java.util.List;
-
-public final class TankLocalizerInputsMessage {
-    public long timestamp;
-    public PositionVelocityPair[] left;
-    public PositionVelocityPair[] right;
-
-    public TankLocalizerInputsMessage(List<PositionVelocityPair> left, List<PositionVelocityPair> right) {
-        this.timestamp = System.nanoTime();
-        this.left = left.toArray(new PositionVelocityPair[0]);
-        this.right = right.toArray(new PositionVelocityPair[0]);
-    }
+class TankLocalizerInputsMessage(
+    left: List<PositionVelocityPair>,
+    right: List<PositionVelocityPair>
+) {
+    var timestamp: Long = System.nanoTime()
+    var left: Array<PositionVelocityPair> = left.toTypedArray<PositionVelocityPair>()
+    var right: Array<PositionVelocityPair> = right.toTypedArray<PositionVelocityPair>()
 }

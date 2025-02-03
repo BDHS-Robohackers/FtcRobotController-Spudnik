@@ -1,119 +1,119 @@
-package org.firstinspires.ftc.teamcode.subsystems;
+package org.firstinspires.ftc.teamcode.subsystems
 
-import com.acmerobotics.dashboard.config.Config;
-import com.arcrobotics.ftclib.command.SubsystemBase;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.acmerobotics.dashboard.config.Config
+import com.arcrobotics.ftclib.command.SubsystemBase
+import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets;
-
-@Deprecated
+@Deprecated("")
 @Config
-public class UppiesSubsystem extends SubsystemBase {
+class UppiesSubsystem(var uppiesMotor: DcMotorEx) : SubsystemBase() {
+    private var state: UppiesState
+    var lastStateChange: Long = 0
 
-    DcMotorEx uppiesMotor;
-    private UppiesState state;
-    long lastStateChange = 0;
-    static float speedMultiplier = .35f;
-
-    private final static FTCDashboardPackets dbp = new FTCDashboardPackets("UppiesSubsytem");
-    private final static FTCDashboardPackets dbp2 = new FTCDashboardPackets("DebugPositionUppies");
-
-    public static boolean PROGRAMATIC_STALL_SAFETY = false;
-    public static boolean PROGRAMATIC_IGNORE_LIMITS = false;
-    // After the motor has enough time to start moving, start checking if the motor is stalling.
-    private static final long STALL_THRESHOLD = 300;
-    // Once the motor is moving less than the specified ticks per second, it is stalling.
-    public static final double STALL_TICKS_PER_SECOND_THRESHOLD = .5;
-
-    public static int MAX_POSITION = -33;
-    public static int MIN_POSITION = -5000;
-
-    public UppiesSubsystem(DcMotorEx uppiesMotor) {
-        this.uppiesMotor = uppiesMotor;
-        this.state = UppiesState.IDLE;
-        uppiesMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        uppiesMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        uppiesMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    init {
+        this.state = UppiesState.IDLE
+        uppiesMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        uppiesMotor.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        uppiesMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
     }
 
-    public void setUppiesState(final UppiesState state) {
-        dbp.info("Updating state to: " + state.toString());
-        UppiesState lastState = this.state;
-        this.state = state;
+    fun setUppiesState(state: UppiesState) {
+        dbp.info("Updating state to: $state")
+        val lastState = this.state
+        this.state = state
         // TODO: Verify that this is the correct direction
-        uppiesMotor.setPower(state == UppiesState.UN_UPPIES ? speedMultiplier : -speedMultiplier);
+        uppiesMotor.power =
+            (if (state == UppiesState.UN_UPPIES) speedMultiplier else -speedMultiplier).toDouble()
         if (state == UppiesState.IDLE) {
-            uppiesMotor.setPower(0);
+            uppiesMotor.power = 0.0
         }
         // If the state changed, reset the timer. Allows for this method to be called periodically/every update.
         if (lastState != this.state) {
-            lastStateChange = System.currentTimeMillis();
+            lastStateChange = System.currentTimeMillis()
         }
-        dbp.send(true);
+        dbp.send(true)
     }
 
-    @Override
-    public void periodic() {
-        super.periodic();
+    override fun periodic() {
+        super.periodic()
 
         if (state == UppiesState.IDLE) {
-            return;
+            return
         }
 
-        int currentPosition = uppiesMotor.getCurrentPosition();
-        dbp2.info("Uppies Position: " + currentPosition);
-        dbp2.send(true);
+        val currentPosition = uppiesMotor.currentPosition
+        dbp2.info("Uppies Position: $currentPosition")
+        dbp2.send(true)
 
         if (!PROGRAMATIC_IGNORE_LIMITS && state == UppiesState.UPPIES && currentPosition <= MIN_POSITION) {
-            setUppiesState(UppiesState.IDLE);
-            dbp.info("EXCEEDED MAX LIMIT. HALTING.");
-            dbp.send(true);
+            setUppiesState(UppiesState.IDLE)
+            dbp.info("EXCEEDED MAX LIMIT. HALTING.")
+            dbp.send(true)
         }
 
         if (!PROGRAMATIC_IGNORE_LIMITS && state == UppiesState.UN_UPPIES && currentPosition >= MAX_POSITION) {
-            setUppiesState(UppiesState.IDLE);
-            dbp.info("EXCEEDED MIN LIMIT. HALTING.");
-            dbp.send(true);
+            setUppiesState(UppiesState.IDLE)
+            dbp.info("EXCEEDED MIN LIMIT. HALTING.")
+            dbp.send(true)
         }
 
         if (!PROGRAMATIC_STALL_SAFETY) {
-            return;
+            return
         }
 
-        long elapsedStateMillis = System.currentTimeMillis() - lastStateChange;
+        val elapsedStateMillis = System.currentTimeMillis() - lastStateChange
         if (elapsedStateMillis > STALL_THRESHOLD) {
-            double ticksPerSecond = uppiesMotor.getVelocity(AngleUnit.DEGREES);
-            dbp.info("Ticks = "+ticksPerSecond);
-            dbp.send(false);
+            val ticksPerSecond = uppiesMotor.getVelocity(AngleUnit.DEGREES)
+            dbp.info("Ticks = $ticksPerSecond")
+            dbp.send(false)
             if (ticksPerSecond < STALL_TICKS_PER_SECOND_THRESHOLD) {
                 // STALLING!!!! STOP MOVING
-                setUppiesState(UppiesState.IDLE);
-                dbp.warn("UPPIES STALLING!");
-                dbp.send(true);
+                setUppiesState(UppiesState.IDLE)
+                dbp.warn("UPPIES STALLING!")
+                dbp.send(true)
             }
         }
     }
 
-    public enum UppiesState {
-        UPPIES, // up
-        UN_UPPIES, // down
+    enum class UppiesState {
+        UPPIES,  // up
+        UN_UPPIES,  // down
         IDLE
     }
 
     /**
      * @author Carter
      */
-    public void IWantUp() {
-        setUppiesState(UppiesState.UPPIES);
+    fun IWantUp() {
+        setUppiesState(UppiesState.UPPIES)
     }
 
-    public void IWantDown() {
-        setUppiesState(UppiesState.UN_UPPIES);
+    fun IWantDown() {
+        setUppiesState(UppiesState.UN_UPPIES)
     }
 
-    public boolean isIdle() {
-        return this.state.equals(UppiesState.IDLE);
+    val isIdle: Boolean
+        get() = this.state == UppiesState.IDLE
+
+    companion object {
+        var speedMultiplier: Float = .35f
+
+        private val dbp = FTCDashboardPackets("UppiesSubsytem")
+        private val dbp2 = FTCDashboardPackets("DebugPositionUppies")
+
+        var PROGRAMATIC_STALL_SAFETY: Boolean = false
+        var PROGRAMATIC_IGNORE_LIMITS: Boolean = false
+
+        // After the motor has enough time to start moving, start checking if the motor is stalling.
+        private const val STALL_THRESHOLD: Long = 300
+
+        // Once the motor is moving less than the specified ticks per second, it is stalling.
+        const val STALL_TICKS_PER_SECOND_THRESHOLD: Double = .5
+
+        var MAX_POSITION: Int = -33
+        var MIN_POSITION: Int = -5000
     }
 }

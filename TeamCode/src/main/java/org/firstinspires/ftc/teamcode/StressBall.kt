@@ -1,103 +1,118 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode
 
-import com.arcrobotics.ftclib.hardware.ServoEx;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
-
-import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION;
-import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_WITHOUT_ENCODER;
-import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.FORWARD;
-import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE;
-import static com.qualcomm.robotcore.util.Range.scale;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import com.qualcomm.robotcore.hardware.CRServo
+import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.qualcomm.robotcore.hardware.Servo
+import com.qualcomm.robotcore.util.Range
+import kotlin.math.abs
 
 /**
  * Created by Jessica on 4/10/2018.
  */
+@TeleOp(name = "StressBall", group = "TOComp")
+class StressBall : OpMode() {
+    private val PULSE_PER_REVOLUTION_NEVEREST40 = 1120
 
-@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "StressBall" , group = "TOComp")
+    private val PULSE_PER_REVOLUTION_NEVEREST40_OVER_40 = 280
 
-public class StressBall extends OpMode {
+    private var frontLeft: DcMotor? = null
+    private var frontRight: DcMotor? = null
+    private var backLeft: DcMotor? = null
+    private var backRight: DcMotor? = null
 
-    private final int PULSE_PER_REVOLUTION_NEVEREST40 = 1120;
+    //
+    private val FeedMotor: CRServo? = null
 
-    private final int PULSE_PER_REVOLUTION_NEVEREST40_OVER_40 = 280;
+    private val TurnServo: Servo? = null
 
-    private DcMotor frontLeft;
-    private DcMotor frontRight;
-    private DcMotor backLeft;
-    private DcMotor backRight;
-//
-    private CRServo FeedMotor;
+    private var ContinuousShooter: CRServo? = null
 
-    private Servo TurnServo;
+    private var SmallContinuous: CRServo? = null
 
-    private CRServo ContinuousShooter;
+    var SERVO_LATCH_UP: Float = 1.0.toFloat()
+    var SERVO_STOP: Float = 0f
 
-    private CRServo SmallContinuous;
+    private val FeedSpeed = 0.05.toFloat()
 
-    public float SERVO_LATCH_UP = (float) 1.0;
-    public float SERVO_STOP = (float) 0;
-
-    private float FeedSpeed = (float) 0.05;
-
-    final double    CLAW_SPEED      = 0.01 ;                            // sets rate to move servo
-    final double    ARM_SPEED       = 0.01 ;                            // sets rate to move servo
+    val CLAW_SPEED: Double = 0.01 // sets rate to move servo
+    val ARM_SPEED: Double = 0.01 // sets rate to move servo
 
 
-    @Override
-    public void init() {
+    override fun init() {
+        frontLeft = hardwareMap.dcMotor["fl_drv"]
+        frontRight = hardwareMap.dcMotor["fr_drv"]
+        backLeft = hardwareMap.dcMotor["bl_drv"]
+        backRight = hardwareMap.dcMotor["br_drv"]
 
-        frontLeft = hardwareMap.dcMotor.get("fl_drv");
-        frontRight = hardwareMap.dcMotor.get("fr_drv");
-        backLeft = hardwareMap.dcMotor.get("bl_drv");
-        backRight = hardwareMap.dcMotor.get("br_drv");
-//
+        //
         //FeedMotor = hardwareMap.crservo.get("FeedMotor");
+        ContinuousShooter = hardwareMap.crservo["ContinuousShooter"]
+        SmallContinuous = hardwareMap.crservo["SmallContinuous"]
 
-        ContinuousShooter = hardwareMap.crservo.get("ContinuousShooter");
-        SmallContinuous = hardwareMap.crservo.get("SmallContinuous");
+        frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER)
+        frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER)
+        backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER)
+        backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER)
 
-        frontLeft.setMode(RUN_WITHOUT_ENCODER);
-        frontRight.setMode(RUN_WITHOUT_ENCODER);
-        backLeft.setMode(RUN_WITHOUT_ENCODER);
-        backRight.setMode(RUN_WITHOUT_ENCODER);
+        backLeft.setDirection(DcMotorSimple.Direction.FORWARD)
+        frontLeft.setDirection(DcMotorSimple.Direction.FORWARD)
+        frontRight.setDirection(DcMotorSimple.Direction.REVERSE)
+        backRight.setDirection(DcMotorSimple.Direction.REVERSE)
 
-        backLeft.setDirection(FORWARD);
-        frontLeft.setDirection(FORWARD);
-        frontRight.setDirection(REVERSE);
-        backRight.setDirection(REVERSE);
-
-//        FeedMotor.setDirection(FORWARD);
-
-        telemetry.update();
+        //        FeedMotor.setDirection(FORWARD);
+        telemetry.update()
     }
 
-    @Override
-    public void init_loop(){
-        super.init_loop();
+    override fun init_loop() {
+        super.init_loop()
         //FeedMotor.setMode(RUN_TO_POSITION);
     }
 
 
-    @Override
-    public void loop() {
+    override fun loop() {
+        val speed = -gamepad1.right_stick_y
+        val direction = gamepad1.right_stick_x
+        val strafe = gamepad1.left_stick_x
 
-        float speed = -gamepad1.right_stick_y;
-        float direction = gamepad1.right_stick_x;
-        float strafe = gamepad1.left_stick_x;
-
-        float Magnitude = Math.abs(speed) + Math.abs(direction) + Math.abs(strafe);
+        var Magnitude = (abs(speed.toDouble()) + abs(direction.toDouble()) + abs(
+            strafe.toDouble()
+        )).toFloat()
         if (Magnitude < 1) {
-            Magnitude = 1;
+            Magnitude = 1f
         }
-        frontLeft.setPower(scale(speed + direction - strafe, -Magnitude, Magnitude, -1, 1));
-        frontRight.setPower(scale(speed - direction + strafe, -Magnitude, Magnitude, -1, 1));
-        backLeft.setPower(scale(speed + direction + strafe, -Magnitude, Magnitude, -1, 1));
-        backRight.setPower(scale(speed - direction - strafe, -Magnitude, Magnitude, -1, 1));
+        frontLeft!!.power = Range.scale(
+            (speed + direction - strafe).toDouble(),
+            -Magnitude.toDouble(),
+            Magnitude.toDouble(),
+            -1.0,
+            1.0
+        )
+        frontRight!!.power = Range.scale(
+            (speed - direction + strafe).toDouble(),
+            -Magnitude.toDouble(),
+            Magnitude.toDouble(),
+            -1.0,
+            1.0
+        )
+        backLeft!!.power = Range.scale(
+            (speed + direction + strafe).toDouble(),
+            -Magnitude.toDouble(),
+            Magnitude.toDouble(),
+            -1.0,
+            1.0
+        )
+        backRight!!.power = Range.scale(
+            (speed - direction - strafe).toDouble(),
+            -Magnitude.toDouble(),
+            Magnitude.toDouble(),
+            -1.0,
+            1.0
+        )
 
-//        //FeedMotor
+        //        //FeedMotor
 //        if (gamepad1.right_bumper && ContinuousShooter.getPower()==1) {
 //            //OneFlickRotation(1); //Change MAX
 //
@@ -116,31 +131,24 @@ public class StressBall extends OpMode {
 //        }
 
         //ContinuosBigOl'Servo
-
         if (gamepad1.a) {
-            ContinuousShooter.setPower(1);
-        }
-        else if (gamepad1.b){
-            ContinuousShooter.setPower(0);
+            ContinuousShooter!!.power = 1.0
+        } else if (gamepad1.b) {
+            ContinuousShooter!!.power = 0.0
         }
 
         //ContinuosBabyDuboisServo
         if (gamepad1.dpad_up) {
-            SmallContinuous.setPower(-1);
-        }
-        else if (gamepad1.dpad_down) {
-            SmallContinuous.setPower(1);
+            SmallContinuous!!.power = -1.0
+        } else if (gamepad1.dpad_down) {
+            SmallContinuous!!.power = 1.0
         } else {
-            SmallContinuous.setPower(0);
+            SmallContinuous!!.power = 0.0
         }
-
-
-
     }
 
-    @Override
-    public void stop() {
-        super.stop();
-        ContinuousShooter.setPower(0);
+    override fun stop() {
+        super.stop()
+        ContinuousShooter!!.power = 0.0
     }
 }

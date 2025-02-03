@@ -1,39 +1,40 @@
-package org.firstinspires.ftc.teamcode.tuning;
+package org.firstinspires.ftc.teamcode.tuning
 
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.Vector2d;
-import com.acmerobotics.roadrunner.ftc.Actions;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.acmerobotics.roadrunner.Pose2d
+import com.acmerobotics.roadrunner.Vector2d
+import com.acmerobotics.roadrunner.ftc.runBlocking
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+import org.firstinspires.ftc.teamcode.MecanumDrive
+import org.firstinspires.ftc.teamcode.TankDrive
 
-import org.firstinspires.ftc.teamcode.MecanumDrive;
-import org.firstinspires.ftc.teamcode.TankDrive;
+class SplineTest : LinearOpMode() {
+    @Throws(InterruptedException::class)
+    override fun runOpMode() {
+        val beginPose = Pose2d(0.0, 0.0, 0.0)
+        if (TuningOpModes.DRIVE_CLASS == MecanumDrive::class.java) {
+            val drive = MecanumDrive(hardwareMap, beginPose)
 
-public final class SplineTest extends LinearOpMode {
-    @Override
-    public void runOpMode() throws InterruptedException {
-        Pose2d beginPose = new Pose2d(0, 0, 0);
-        if (TuningOpModes.DRIVE_CLASS.equals(MecanumDrive.class)) {
-            MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
+            waitForStart()
 
-            waitForStart();
-
-            Actions.runBlocking(
+            runBlocking(
                 drive.actionBuilder(beginPose)
-                        .splineTo(new Vector2d(30, 30), Math.PI / 2)
-                        .splineTo(new Vector2d(0, 60), Math.PI)
-                        .build());
-        } else if (TuningOpModes.DRIVE_CLASS.equals(TankDrive.class)) {
-            TankDrive drive = new TankDrive(hardwareMap, beginPose);
+                    .splineTo(Vector2d(30.0, 30.0), Math.PI / 2)
+                    .splineTo(Vector2d(0.0, 60.0), Math.PI)
+                    .build()
+            )
+        } else if (TuningOpModes.DRIVE_CLASS == TankDrive::class.java) {
+            val drive = TankDrive(hardwareMap, beginPose)
 
-            waitForStart();
+            waitForStart()
 
-            Actions.runBlocking(
-                    drive.actionBuilder(beginPose)
-                            .splineTo(new Vector2d(30, 30), Math.PI / 2)
-                            .splineTo(new Vector2d(0, 60), Math.PI)
-                            .build());
+            runBlocking(
+                drive.actionBuilder(beginPose)
+                    .splineTo(Vector2d(30.0, 30.0), Math.PI / 2)
+                    .splineTo(Vector2d(0.0, 60.0), Math.PI)
+                    .build()
+            )
         } else {
-            throw new RuntimeException();
+            throw RuntimeException()
         }
     }
 }

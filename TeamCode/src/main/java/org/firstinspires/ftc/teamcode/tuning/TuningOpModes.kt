@@ -1,179 +1,198 @@
-package org.firstinspires.ftc.teamcode.tuning;
+package org.firstinspires.ftc.teamcode.tuning
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
-import com.acmerobotics.roadrunner.MotorFeedforward;
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.ftc.AngularRampLogger;
-import com.acmerobotics.roadrunner.ftc.DeadWheelDirectionDebugger;
-import com.acmerobotics.roadrunner.ftc.DriveType;
-import com.acmerobotics.roadrunner.ftc.DriveView;
-import com.acmerobotics.roadrunner.ftc.DriveViewFactory;
-import com.acmerobotics.roadrunner.ftc.Encoder;
-import com.acmerobotics.roadrunner.ftc.ForwardPushTest;
-import com.acmerobotics.roadrunner.ftc.ForwardRampLogger;
-import com.acmerobotics.roadrunner.ftc.LateralPushTest;
-import com.acmerobotics.roadrunner.ftc.LateralRampLogger;
-import com.acmerobotics.roadrunner.ftc.ManualFeedforwardTuner;
-import com.acmerobotics.roadrunner.ftc.MecanumMotorDirectionDebugger;
-import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
-import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar;
+import com.acmerobotics.dashboard.FtcDashboard
+import com.acmerobotics.dashboard.config.reflection.ReflectionConfig
+import com.acmerobotics.dashboard.config.variable.CustomVariable
+import com.acmerobotics.roadrunner.MotorFeedforward
+import com.acmerobotics.roadrunner.Pose2d
+import com.acmerobotics.roadrunner.ftc.AngularRampLogger
+import com.acmerobotics.roadrunner.ftc.DeadWheelDirectionDebugger
+import com.acmerobotics.roadrunner.ftc.DriveType
+import com.acmerobotics.roadrunner.ftc.DriveView
+import com.acmerobotics.roadrunner.ftc.DriveViewFactory
+import com.acmerobotics.roadrunner.ftc.Encoder
+import com.acmerobotics.roadrunner.ftc.ForwardPushTest
+import com.acmerobotics.roadrunner.ftc.ForwardRampLogger
+import com.acmerobotics.roadrunner.ftc.LateralPushTest
+import com.acmerobotics.roadrunner.ftc.LateralRampLogger
+import com.acmerobotics.roadrunner.ftc.ManualFeedforwardTuner
+import com.acmerobotics.roadrunner.ftc.MecanumMotorDirectionDebugger
+import com.qualcomm.hardware.lynx.LynxModule
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.robotcore.eventloop.opmode.OpModeManager
+import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar
+import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
+import org.firstinspires.ftc.teamcode.MecanumDrive
+import org.firstinspires.ftc.teamcode.TankDrive
+import org.firstinspires.ftc.teamcode.ThreeDeadWheelLocalizer
+import org.firstinspires.ftc.teamcode.TwoDeadWheelLocalizer
+import java.util.Arrays
 
-import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta;
-import org.firstinspires.ftc.teamcode.MecanumDrive;
-import org.firstinspires.ftc.teamcode.TankDrive;
-import org.firstinspires.ftc.teamcode.ThreeDeadWheelLocalizer;
-import org.firstinspires.ftc.teamcode.TwoDeadWheelLocalizer;
+object TuningOpModes {
+    val DRIVE_CLASS: Class<*> = MecanumDrive::class.java
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+    const val GROUP: String = "quickstart"
+    const val DISABLED: Boolean = false
 
-public final class TuningOpModes {
-    public static final Class<?> DRIVE_CLASS = MecanumDrive.class;
-
-    public static final String GROUP = "quickstart";
-    public static final boolean DISABLED = false;
-
-    private TuningOpModes() {}
-
-    private static OpModeMeta metaForClass(Class<? extends OpMode> cls) {
-        return new OpModeMeta.Builder()
-                .setName(cls.getSimpleName())
-                .setGroup(GROUP)
-                .setFlavor(OpModeMeta.Flavor.TELEOP)
-                .build();
+    private fun metaForClass(cls: Class<out OpMode?>): OpModeMeta {
+        return OpModeMeta.Builder()
+            .setName(cls.simpleName)
+            .setGroup(GROUP)
+            .setFlavor(OpModeMeta.Flavor.TELEOP)
+            .build()
     }
 
     @OpModeRegistrar
-    public static void register(OpModeManager manager) {
-        if (DISABLED) return;
+    fun register(manager: OpModeManager) {
+        if (DISABLED) return
 
-        DriveViewFactory dvf;
-        if (DRIVE_CLASS.equals(MecanumDrive.class)) {
-            dvf = hardwareMap -> {
-                MecanumDrive md = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
-
-                List<Encoder> leftEncs = new ArrayList<>(), rightEncs = new ArrayList<>();
-                List<Encoder> parEncs = new ArrayList<>(), perpEncs = new ArrayList<>();
-                if (md.localizer instanceof MecanumDrive.DriveLocalizer) {
-                    MecanumDrive.DriveLocalizer dl = (MecanumDrive.DriveLocalizer) md.localizer;
-                    leftEncs.add(dl.leftFront);
-                    leftEncs.add(dl.leftBack);
-                    rightEncs.add(dl.rightFront);
-                    rightEncs.add(dl.rightBack);
-                } else if (md.localizer instanceof ThreeDeadWheelLocalizer) {
-                    ThreeDeadWheelLocalizer dl = (ThreeDeadWheelLocalizer) md.localizer;
-                    parEncs.add(dl.par0);
-                    parEncs.add(dl.par1);
-                    perpEncs.add(dl.perp);
-                } else if (md.localizer instanceof TwoDeadWheelLocalizer) {
-                    TwoDeadWheelLocalizer dl = (TwoDeadWheelLocalizer) md.localizer;
-                    parEncs.add(dl.par);
-                    perpEncs.add(dl.perp);
+        val dvf: DriveViewFactory
+        if (DRIVE_CLASS == MecanumDrive::class.java) {
+            dvf = DriveViewFactory { hardwareMap: HardwareMap ->
+                val md = MecanumDrive(hardwareMap, Pose2d(0.0, 0.0, 0.0))
+                val leftEncs: MutableList<Encoder> = ArrayList()
+                val rightEncs: MutableList<Encoder> = ArrayList()
+                val parEncs: MutableList<Encoder> = ArrayList()
+                val perpEncs: MutableList<Encoder> = ArrayList()
+                if (md.localizer is MecanumDrive.DriveLocalizer) {
+                    val dl = md.localizer
+                    leftEncs.add(dl.leftFront)
+                    leftEncs.add(dl.leftBack)
+                    rightEncs.add(dl.rightFront)
+                    rightEncs.add(dl.rightBack)
+                } else if (md.localizer is ThreeDeadWheelLocalizer) {
+                    val dl = md.localizer
+                    parEncs.add(dl.par0)
+                    parEncs.add(dl.par1)
+                    perpEncs.add(dl.perp)
+                } else if (md.localizer is TwoDeadWheelLocalizer) {
+                    val dl = md.localizer
+                    parEncs.add(dl.par)
+                    perpEncs.add(dl.perp)
                 } else {
-                    throw new RuntimeException("unknown localizer: " + md.localizer.getClass().getName());
+                    throw RuntimeException("unknown localizer: " + md.localizer.javaClass.name)
                 }
-
-                return new DriveView(
+                DriveView(
                     DriveType.MECANUM,
-                        MecanumDrive.PARAMS.inPerTick,
-                        MecanumDrive.PARAMS.maxWheelVel,
-                        MecanumDrive.PARAMS.minProfileAccel,
-                        MecanumDrive.PARAMS.maxProfileAccel,
-                        hardwareMap.getAll(LynxModule.class),
-                        Arrays.asList(
-                                md.leftFront,
-                                md.leftBack
-                        ),
-                        Arrays.asList(
-                                md.rightFront,
-                                md.rightBack
-                        ),
-                        leftEncs,
-                        rightEncs,
-                        parEncs,
-                        perpEncs,
-                        md.lazyImu,
-                        md.voltageSensor,
-                        () -> new MotorFeedforward(MecanumDrive.PARAMS.kS,
-                                MecanumDrive.PARAMS.kV / MecanumDrive.PARAMS.inPerTick,
-                                MecanumDrive.PARAMS.kA / MecanumDrive.PARAMS.inPerTick)
-                );
-            };
-        } else if (DRIVE_CLASS.equals(TankDrive.class)) {
-            dvf = hardwareMap -> {
-                TankDrive td = new TankDrive(hardwareMap, new Pose2d(0, 0, 0));
-
-                List<Encoder> leftEncs = new ArrayList<>(), rightEncs = new ArrayList<>();
-                List<Encoder> parEncs = new ArrayList<>(), perpEncs = new ArrayList<>();
-                if (td.localizer instanceof TankDrive.DriveLocalizer) {
-                    TankDrive.DriveLocalizer dl = (TankDrive.DriveLocalizer) td.localizer;
-                    leftEncs.addAll(dl.leftEncs);
-                    rightEncs.addAll(dl.rightEncs);
-                } else if (td.localizer instanceof ThreeDeadWheelLocalizer) {
-                    ThreeDeadWheelLocalizer dl = (ThreeDeadWheelLocalizer) td.localizer;
-                    parEncs.add(dl.par0);
-                    parEncs.add(dl.par1);
-                    perpEncs.add(dl.perp);
-                } else if (td.localizer instanceof TwoDeadWheelLocalizer) {
-                    TwoDeadWheelLocalizer dl = (TwoDeadWheelLocalizer) td.localizer;
-                    parEncs.add(dl.par);
-                    perpEncs.add(dl.perp);
-                } else {
-                    throw new RuntimeException("unknown localizer: " + td.localizer.getClass().getName());
+                    MecanumDrive.PARAMS.inPerTick,
+                    MecanumDrive.PARAMS.maxWheelVel,
+                    MecanumDrive.PARAMS.minProfileAccel,
+                    MecanumDrive.PARAMS.maxProfileAccel,
+                    hardwareMap.getAll(LynxModule::class.java),
+                    Arrays.asList(
+                        md.leftFront,
+                        md.leftBack
+                    ),
+                    Arrays.asList(
+                        md.rightFront,
+                        md.rightBack
+                    ),
+                    leftEncs,
+                    rightEncs,
+                    parEncs,
+                    perpEncs,
+                    md.lazyImu,
+                    md.voltageSensor
+                ) {
+                    MotorFeedforward(
+                        MecanumDrive.PARAMS.kS,
+                        MecanumDrive.PARAMS.kV / MecanumDrive.PARAMS.inPerTick,
+                        MecanumDrive.PARAMS.kA / MecanumDrive.PARAMS.inPerTick
+                    )
                 }
-
-                return new DriveView(
+            }
+        } else if (DRIVE_CLASS == TankDrive::class.java) {
+            dvf = DriveViewFactory { hardwareMap: HardwareMap ->
+                val td = TankDrive(hardwareMap, Pose2d(0.0, 0.0, 0.0))
+                val leftEncs: MutableList<Encoder> = ArrayList()
+                val rightEncs: MutableList<Encoder> = ArrayList()
+                val parEncs: MutableList<Encoder> = ArrayList()
+                val perpEncs: MutableList<Encoder> = ArrayList()
+                if (td.localizer is TankDrive.DriveLocalizer) {
+                    val dl = td.localizer
+                    leftEncs.addAll(dl.leftEncs)
+                    rightEncs.addAll(dl.rightEncs)
+                } else if (td.localizer is ThreeDeadWheelLocalizer) {
+                    val dl = td.localizer
+                    parEncs.add(dl.par0)
+                    parEncs.add(dl.par1)
+                    perpEncs.add(dl.perp)
+                } else if (td.localizer is TwoDeadWheelLocalizer) {
+                    val dl = td.localizer
+                    parEncs.add(dl.par)
+                    perpEncs.add(dl.perp)
+                } else {
+                    throw RuntimeException("unknown localizer: " + td.localizer.javaClass.name)
+                }
+                DriveView(
                     DriveType.TANK,
-                        TankDrive.PARAMS.inPerTick,
-                        TankDrive.PARAMS.maxWheelVel,
-                        TankDrive.PARAMS.minProfileAccel,
-                        TankDrive.PARAMS.maxProfileAccel,
-                        hardwareMap.getAll(LynxModule.class),
-                        td.leftMotors,
-                        td.rightMotors,
-                        leftEncs,
-                        rightEncs,
-                        parEncs,
-                        perpEncs,
-                        td.lazyImu,
-                        td.voltageSensor,
-                        () -> new MotorFeedforward(TankDrive.PARAMS.kS,
-                                TankDrive.PARAMS.kV / TankDrive.PARAMS.inPerTick,
-                                TankDrive.PARAMS.kA / TankDrive.PARAMS.inPerTick)
-                );
-            };
+                    TankDrive.PARAMS.inPerTick,
+                    TankDrive.PARAMS.maxWheelVel,
+                    TankDrive.PARAMS.minProfileAccel,
+                    TankDrive.PARAMS.maxProfileAccel,
+                    hardwareMap.getAll(LynxModule::class.java),
+                    td.leftMotors,
+                    td.rightMotors,
+                    leftEncs,
+                    rightEncs,
+                    parEncs,
+                    perpEncs,
+                    td.lazyImu,
+                    td.voltageSensor
+                ) {
+                    MotorFeedforward(
+                        TankDrive.PARAMS.kS,
+                        TankDrive.PARAMS.kV / TankDrive.PARAMS.inPerTick,
+                        TankDrive.PARAMS.kA / TankDrive.PARAMS.inPerTick
+                    )
+                }
+            }
         } else {
-            throw new RuntimeException();
+            throw RuntimeException()
         }
 
-        manager.register(metaForClass(AngularRampLogger.class), new AngularRampLogger(dvf));
-        manager.register(metaForClass(ForwardPushTest.class), new ForwardPushTest(dvf));
-        manager.register(metaForClass(ForwardRampLogger.class), new ForwardRampLogger(dvf));
-        manager.register(metaForClass(LateralPushTest.class), new LateralPushTest(dvf));
-        manager.register(metaForClass(LateralRampLogger.class), new LateralRampLogger(dvf));
-        manager.register(metaForClass(ManualFeedforwardTuner.class), new ManualFeedforwardTuner(dvf));
-        manager.register(metaForClass(MecanumMotorDirectionDebugger.class), new MecanumMotorDirectionDebugger(dvf));
-        manager.register(metaForClass(DeadWheelDirectionDebugger.class), new DeadWheelDirectionDebugger(dvf));
+        manager.register(metaForClass(AngularRampLogger::class.java), AngularRampLogger(dvf))
+        manager.register(metaForClass(ForwardPushTest::class.java), ForwardPushTest(dvf))
+        manager.register(metaForClass(ForwardRampLogger::class.java), ForwardRampLogger(dvf))
+        manager.register(metaForClass(LateralPushTest::class.java), LateralPushTest(dvf))
+        manager.register(metaForClass(LateralRampLogger::class.java), LateralRampLogger(dvf))
+        manager.register(
+            metaForClass(ManualFeedforwardTuner::class.java),
+            ManualFeedforwardTuner(dvf)
+        )
+        manager.register(
+            metaForClass(MecanumMotorDirectionDebugger::class.java),
+            MecanumMotorDirectionDebugger(dvf)
+        )
+        manager.register(
+            metaForClass(DeadWheelDirectionDebugger::class.java),
+            DeadWheelDirectionDebugger(dvf)
+        )
 
-        manager.register(metaForClass(ManualFeedbackTuner.class), ManualFeedbackTuner.class);
-        manager.register(metaForClass(SplineTest.class), SplineTest.class);
-        manager.register(metaForClass(LocalizationTest.class), LocalizationTest.class);
+        manager.register(
+            metaForClass(ManualFeedbackTuner::class.java),
+            ManualFeedbackTuner::class.java
+        )
+        manager.register(metaForClass(SplineTest::class.java), SplineTest::class.java)
+        manager.register(metaForClass(LocalizationTest::class.java), LocalizationTest::class.java)
 
-        FtcDashboard.getInstance().withConfigRoot(configRoot -> {
-            for (Class<?> c : Arrays.asList(
-                    AngularRampLogger.class,
-                    ForwardRampLogger.class,
-                    LateralRampLogger.class,
-                    ManualFeedforwardTuner.class,
-                    MecanumMotorDirectionDebugger.class,
-                    ManualFeedbackTuner.class
+        FtcDashboard.getInstance().withConfigRoot { configRoot: CustomVariable ->
+            for (c in Arrays.asList(
+                AngularRampLogger::class.java,
+                ForwardRampLogger::class.java,
+                LateralRampLogger::class.java,
+                ManualFeedforwardTuner::class.java,
+                MecanumMotorDirectionDebugger::class.java,
+                ManualFeedbackTuner::class.java
             )) {
-                configRoot.putVariable(c.getSimpleName(), ReflectionConfig.createVariableFromClass(c));
+                configRoot.putVariable(
+                    c.simpleName,
+                    ReflectionConfig.createVariableFromClass(
+                        c
+                    )
+                )
             }
-        });
+        }
     }
 }

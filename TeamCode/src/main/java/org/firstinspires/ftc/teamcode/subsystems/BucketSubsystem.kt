@@ -1,29 +1,28 @@
-package org.firstinspires.ftc.teamcode.subsystems;
+package org.firstinspires.ftc.teamcode.subsystems
 
-import com.arcrobotics.ftclib.command.SubsystemBase;
-import com.arcrobotics.ftclib.hardware.ServoEx;
+import com.arcrobotics.ftclib.command.SubsystemBase
+import com.arcrobotics.ftclib.hardware.ServoEx
 
-@Deprecated
-public class BucketSubsystem extends SubsystemBase {
-
-    final ServoEx servo;
-    static final float MAX_POSITION = 90 + 5; // Was 90 + 25 as of 12/9/2024
-
-    public BucketSubsystem(ServoEx servoEx) {
-        this.servo = servoEx;
-        this.servo.setRange(0, MAX_POSITION);
+@Deprecated("")
+class BucketSubsystem(val servo: ServoEx) : SubsystemBase() {
+    init {
+        servo.setRange(0.0, MAX_POSITION.toDouble())
     }
 
-    public void moveToNormalPosition(boolean normalPosition) {
-        servo.setPosition(normalPosition ? 0.05 : .8f);
+    fun moveToNormalPosition(normalPosition: Boolean) {
+        servo.position = if (normalPosition) 0.05 else .8
     }
 
-    public void dumpBucket() {
-        moveToNormalPosition(false);
+    fun dumpBucket() {
+        moveToNormalPosition(false)
     }
 
-    public void resetBucket() {
-        moveToNormalPosition(true);
+    fun resetBucket() {
+        moveToNormalPosition(true)
     }
 
+    companion object {
+        const val MAX_POSITION: Float = (90 + 5 // Was 90 + 25 as of 12/9/2024
+                ).toFloat()
+    }
 }
