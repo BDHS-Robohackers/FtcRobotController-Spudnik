@@ -4,35 +4,36 @@ import com.arcrobotics.ftclib.command.CommandOpMode
 import com.arcrobotics.ftclib.command.button.Trigger
 import com.arcrobotics.ftclib.gamepad.GamepadEx
 import com.arcrobotics.ftclib.gamepad.GamepadKeys
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.teamcode.commands.DefaultDrive
-import org.firstinspires.ftc.teamcode.commands.MovePincherCommand
+import org.firstinspires.ftc.teamcode.subsystems.ArmSubsystem
 import org.firstinspires.ftc.teamcode.subsystems.DriveSubsystem
-import org.firstinspires.ftc.teamcode.subsystems.EmergencyArmSubsystem
-import org.firstinspires.ftc.teamcode.subsystems.HangSubsystem
-import org.firstinspires.ftc.teamcode.subsystems.PincherSubsystem
-import org.firstinspires.ftc.teamcode.util.FTCDashboardPackets
-import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer
+import org.firstinspires.ftc.teamcode.subsystems.ExtendoSystem
+import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem
+import org.firstinspires.ftc.teamcode.subsystems.UppieTwoSubsystem
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets
 import java.util.function.DoubleSupplier
 import kotlin.math.abs
 
+@TeleOp(name = "RealestDriverOpMode")
 class DriveCommandOpMode : CommandOpMode() {
-
-    private lateinit var driverController: GamepadEx
-    private lateinit var armerController:GamepadEx
+    private var driverController: GamepadEx? = null
+    private var armerController: GamepadEx? = null
     private val slowdownButton = GamepadKeys.Button.RIGHT_BUMPER
     private val slowdownButton2 = GamepadKeys.Button.LEFT_BUMPER
 
-    private lateinit var slowdownMultiplier: DoubleSupplier
-    private lateinit var forwardBack:DoubleSupplier
-    private lateinit var leftRight:DoubleSupplier
-    private lateinit var rotation:DoubleSupplier
+    private var slowdownMultiplier: DoubleSupplier? = null
+    private var forwardBack: DoubleSupplier? = null
+    private var leftRight: DoubleSupplier? = null
+    private var rotation: DoubleSupplier? = null
 
-    private lateinit var driveSubsystem: DriveSubsystem
-    private lateinit var hangSubsystem: HangSubsystem
-    private lateinit var armSubsystem: EmergencyArmSubsystem
-    private lateinit var pincherSubsystem: PincherSubsystem
+    private var driveSubsystem: DriveSubsystem? = null
+    private val armSubsystem: ArmSubsystem? = null
+    private var intakeSubsystem: IntakeSubsystem? = null
+    private var uppieTwoSubsystem: UppieTwoSubsystem? = null
+    private var extenderSystem: ExtendoSystem? = null
 
-    private lateinit var driveCommand: DefaultDrive
+    private var driveCommand: DefaultDrive? = null
 
     private val dbp = FTCDashboardPackets("TeleOP")
 
@@ -48,8 +49,8 @@ class DriveCommandOpMode : CommandOpMode() {
             driveSubsystem = DriveSubsystem(hardwareMap)
             register(driveSubsystem)
             initializeDriveSuppliers()
-            driveCommand = DefaultDrive(driveSubsystem, gamepad1)
-            driveSubsystem.defaultCommand = driveCommand
+            driveCommand = DefaultDrive(driveSubsystem!!, gamepad1)
+            driveSubsystem!!.defaultCommand = driveCommand
         } catch (e: Exception) {
             e.printStackTrace()
             requestOpModeStop()
@@ -57,150 +58,119 @@ class DriveCommandOpMode : CommandOpMode() {
         }
 
         try {
-            hangSubsystem = HangSubsystem(hardwareMap)
+            uppieTwoSubsystem = UppieTwoSubsystem(hardwareMap, false)
 
-            // D-Pad Up and D-Pad Down toggles the manages the hanging
-            armerController.getGamepadButton(GamepadKeys.Button.Y).whileActiveContinuous(Runnable {
-                hangSubsystem.setHangDirection(HangSubsystem.HangDirection.UP)
-            }).whenInactive(Runnable {
-                hangSubsystem.setHangDirection(HangSubsystem.HangDirection.IDLE)
-            })
+            armerController!!.getGamepadButton(GamepadKeys.Button.Y)
+                .whileActiveContinuous(Runnable {
+                    uppieTwoSubsystem!!.setUppieState(UppieTwoSubsystem.UppieState.MAX)
+                })
+                .whenInactive(Runnable { uppieTwoSubsystem!!.setUppieState(UppieTwoSubsystem.UppieState.IDLE) })
 
-            armerController.getGamepadButton(GamepadKeys.Button.X).whileActiveContinuous(Runnable {
-                hangSubsystem.setHangDirection(HangSubsystem.HangDirection.DOWN)
-            }).whenInactive(Runnable {
-                hangSubsystem.setHangDirection(HangSubsystem.HangDirection.IDLE)
+            armerController!!.getGamepadButton(GamepadKeys.Button.X)
+                .whileActiveContinuous(Runnable {
+                    uppieTwoSubsystem!!.setUppieState(UppieTwoSubsystem.UppieState.MIN)
+                })
+                .whenInactive(Runnable { uppieTwoSubsystem!!.setUppieState(UppieTwoSubsystem.UppieState.IDLE) })
+
+            armerController!!.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(Runnable {
+                uppieTwoSubsystem!!.setUppieState(UppieTwoSubsystem.UppieState.HOOK)
             })
+            armerController!!.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(Runnable {
+                uppieTwoSubsystem!!.setUppieState(UppieTwoSubsystem.UppieState.PICK_UP)
+            })
+            armerController!!.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
+                .whenPressed(Runnable {
+                    uppieTwoSubsystem!!.setUppieState(UppieTwoSubsystem.UppieState.ATTACH)
+                })
         } catch (e: Exception) {
-            dbp.info("ERROR IN HANG SYSTEM")
+            dbp.info("ERROR IN UPPIE SYSTEM")
             dbp.error(e)
             dbp.send(true)
-            telemetry.addData("Hang", "Error in hang subsystem: " + e.message)
+            telemetry.addData("UPPIE", "Error in uppie subsystem: " + e.message)
             telemetry.update()
             throw RuntimeException(e)
         }
 
         try {
-            armSubsystem = EmergencyArmSubsystem(hardwareMap, telemetry)
-            val threshold = .1f
+            extenderSystem = ExtendoSystem(hardwareMap)
 
-
-            // Bumpers handle the lower arm
-            // Triggers handle the higher arm
-            // "A" toggles the pincher state
-            // Left Joystick X moves the wrist
-            val higherSupplier =
-                DoubleSupplier { armerController.rightY } //() -> armerController.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - armerController.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER);
-            val lowerSupplier = DoubleSupplier {
-                armerController.getTrigger(
+            /*armerController.getGamepadButton(GamepadKeys.Button.DPAD_UP).whileActiveContinuous(() -> {
+                extenderSystem.setDirection(ExtendoSystem.Direction.OUTWARD);
+            }).whenInactive(() -> extenderSystem.setDirection(ExtendoSystem.Direction.NONE));
+            armerController.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whileActiveContinuous(() -> {
+                extenderSystem.setDirection(ExtendoSystem.Direction.INWARD);
+            }).whenInactive(() -> extenderSystem.setDirection(ExtendoSystem.Direction.NONE));*/
+            val rightTrigger = Trigger {
+                armerController!!.getTrigger(
                     GamepadKeys.Trigger.RIGHT_TRIGGER
-                ) - armerController.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER)
+                ) > 0.1
+            }
+            val leftTrigger = Trigger {
+                armerController!!.getTrigger(
+                    GamepadKeys.Trigger.LEFT_TRIGGER
+                ) > 0.1
             }
 
-            Trigger {
-                abs(
-                    higherSupplier.asDouble
-                ) > threshold
-            }.whileActiveContinuous(
-                Runnable {
-                    armSubsystem.setHigherArmPower(higherSupplier.asDouble)
-                }).whenInactive(Runnable {
-                armSubsystem.setHigherArmPower(0.0)
+            rightTrigger.whileActiveContinuous(Runnable {
+                extenderSystem!!.setDirection(ExtendoSystem.Direction.OUTWARD)
             })
+                .whenInactive(Runnable { extenderSystem!!.setDirection(ExtendoSystem.Direction.NONE) })
+            leftTrigger.whileActiveContinuous(Runnable {
+                extenderSystem!!.setDirection(ExtendoSystem.Direction.INWARD)
+            })
+                .whenInactive(Runnable { extenderSystem!!.setDirection(ExtendoSystem.Direction.NONE) })
 
-            Trigger {
-                abs(
-                    lowerSupplier.asDouble
-                ) > threshold
-            }.whileActiveContinuous(
-                Runnable {
-                    armSubsystem.setLowerArmPower(lowerSupplier.asDouble)
-                }).whenInactive(Runnable {
-                armSubsystem.setLowerArmPower(0.0)
-            })
-            
-            Trigger {
-                abs(
-                    armerController.leftX
-                ) > threshold
-            }.whileActiveContinuous(
-                Runnable {
-                    armSubsystem.setWristPower(armerController.leftX)
-                }).whenInactive(Runnable { armSubsystem.setWristPower(0.0) })
-
-            val angularVelocityLower = 25.0
-            armerController.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(Runnable {
-                armSubsystem.constantX(angularVelocityLower)
-            }).whenInactive(Runnable {
-                armSubsystem.setLowerArmPower(0.0)
-                armSubsystem.setHigherArmPower(0.0)
-            })
-            armerController.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(Runnable {
-                armSubsystem.constantX(-angularVelocityLower)
-            }).whenInactive(Runnable {
-                armSubsystem.setLowerArmPower(0.0)
-                armSubsystem.setHigherArmPower(0.0)
-            })
-
-            armerController.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(Runnable {
-                armSubsystem.constantY(angularVelocityLower) // Todo: Might need to swap the negative sign
-            }).whenInactive(Runnable {
-                armSubsystem.setLowerArmPower(0.0)
-                armSubsystem.setHigherArmPower(0.0)
-            })
-            armerController.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(Runnable {
-                armSubsystem.constantY(-angularVelocityLower) // Todo: Might need to swap the negative sign
-            }).whenInactive(Runnable {
-                armSubsystem.setLowerArmPower(0.0)
-                armSubsystem.setHigherArmPower(0.0)
-            })
-            Trigger {
-                abs(
-                    armerController.leftX
-                ) > threshold
-            }.whileActiveContinuous(
-                Runnable {
-                    armSubsystem.setWristPower(armerController.leftX)
-                }).whenInactive(Runnable {
-                armSubsystem.setWristPower(0.0)
-            })
+            armerController!!.getGamepadButton(GamepadKeys.Button.BACK)
+                .whenPressed(Runnable { uppieTwoSubsystem!!.resetMotorEncoders() })
         } catch (e: Exception) {
-            dbp.info("ERROR IN ARM SYSTEM")
+            dbp.info("ERROR IN EXTENDER SYSTEM")
             dbp.error(e)
             dbp.send(true)
-            telemetry.addData("Arm", "Error in arm subsystem: " + e.message)
+            telemetry.addData("Extender", "Error in extender subsystem: " + e.message)
             telemetry.update()
             throw RuntimeException(e)
         }
 
         try {
-            val pincher1 = RobotHardwareInitializer.ServoComponent.FINGER_1.getEx(
-                hardwareMap,
-                0.0,
-                PincherSubsystem.MAX_ANGLE.toDouble()
-            )
-            val pincher2 = RobotHardwareInitializer.ServoComponent.FINGER_2.getEx(
-                hardwareMap,
-                0.0,
-                PincherSubsystem.MAX_ANGLE.toDouble()
-            )
-            pincherSubsystem = PincherSubsystem(pincher1, pincher2)
-            register(pincherSubsystem)
+            intakeSubsystem = IntakeSubsystem(hardwareMap)
 
-            val closePincher =
-                MovePincherCommand(pincherSubsystem, PincherSubsystem.FingerPositions.CLOSED)
-            val openPincher =
-                MovePincherCommand(pincherSubsystem, PincherSubsystem.FingerPositions.OPEN)
+            //armerController.getGamepadButton(GamepadKeys.Button.A).toggleWhenPressed(() -> intakeSubsystem.tiltIntake(), () -> intakeSubsystem.untiltIntake());
+            val intakeTiltSupplier = DoubleSupplier { armerController!!.leftY }
+            val intakeTiltTrigger = Trigger {
+                abs(
+                    intakeTiltSupplier.asDouble
+                ) > .1
+            }
+            intakeTiltTrigger.whileActiveContinuous(Runnable {
+                intakeSubsystem!!.moveTiltIntake(
+                    intakeTiltSupplier.asDouble
+                )
+            })
+                .whenInactive(Runnable { intakeSubsystem!!.moveTiltIntake(0.0) })
 
-            armerController.getGamepadButton(GamepadKeys.Button.A)
-                .toggleWhenPressed(closePincher, openPincher)
-            pincherSubsystem.closeFinger()
+            //armerController.getGamepadButton(GamepadKeys.Button.B).whenPressed(() -> intakeSubsystem.toggleIntakeState());
+            armerController!!.getGamepadButton(GamepadKeys.Button.B).whenPressed(Runnable {
+                intakeSubsystem!!.setIntakeState(
+                    true,
+                    intakeSubsystem!!.intakeState
+                )
+            }).whenReleased(
+                Runnable { intakeSubsystem!!.setIntakeState(false, intakeSubsystem!!.intakeState) })
+            armerController!!.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
+                .whenPressed(Runnable { intakeSubsystem!!.reverseIntake() }).whenReleased(
+                    Runnable {
+                        intakeSubsystem!!.setIntakeState(
+                            false,
+                            intakeSubsystem!!.intakeState
+                        )
+                    })
         } catch (e: Exception) {
-            dbp.info("ERROR IN PINCHER SYSTEM")
+            dbp.info("ERROR IN INTAKE SYSTEM")
             dbp.error(e)
             dbp.send(true)
             throw RuntimeException(e)
         }
+
 
         dbp.info("Subsystems registered.")
         dbp.send(false)
@@ -216,35 +186,37 @@ class DriveCommandOpMode : CommandOpMode() {
         // NOTE: Do not include the opModeIsActive() while loop, as it prevents commands from running
     }
 
+    override fun reset() {
+        super.reset()
+    }
+
     private fun initializeDriveSuppliers() {
         slowdownMultiplier = DoubleSupplier {
-            1.0 / (if ((driverController.getButton(slowdownButton)
-                        || driverController.getButton(slowdownButton2)
-                        || driverController.getButton(GamepadKeys.Button.A))
+            1.0 / (if ((driverController!!.getButton(slowdownButton)
+                        || driverController!!.getButton(slowdownButton2)
+                        || driverController!!.getButton(GamepadKeys.Button.A))
             ) 1.0 else 2.0)
         }
-        rotation = DoubleSupplier { driverController.rightX * slowdownMultiplier.asDouble }
+        rotation = DoubleSupplier { driverController!!.rightX * slowdownMultiplier!!.asDouble }
 
         forwardBack = DoubleSupplier {
-            val dpadY =
-                ((if (driverController.getButton(GamepadKeys.Button.DPAD_UP)) 1 else 0)
-                        - (if (driverController.getButton(GamepadKeys.Button.DPAD_DOWN)) 1 else 0))
+            val dpadY = ((if (driverController!!.getButton(GamepadKeys.Button.DPAD_UP)) 1 else 0)
+                    - (if (driverController!!.getButton(GamepadKeys.Button.DPAD_DOWN)) 1 else 0))
             if (dpadY != 0) {
-                return@DoubleSupplier dpadY * slowdownMultiplier.asDouble
+                return@DoubleSupplier dpadY * slowdownMultiplier!!.asDouble
             } else {
-                return@DoubleSupplier driverController.leftY * slowdownMultiplier.asDouble
+                return@DoubleSupplier driverController!!.leftY * slowdownMultiplier!!.asDouble
             }
         }
         leftRight = DoubleSupplier {
             val dpadX =
-                ((if (driverController.getButton(GamepadKeys.Button.DPAD_RIGHT)) 1 else 0)
-                        - (if (driverController.getButton(GamepadKeys.Button.DPAD_LEFT)) 1 else 0))
+                (-(if (driverController!!.getButton(GamepadKeys.Button.DPAD_RIGHT)) 1 else 0)
+                        + (if (driverController!!.getButton(GamepadKeys.Button.DPAD_LEFT)) 1 else 0))
             if (dpadX != 0) {
-                return@DoubleSupplier dpadX * slowdownMultiplier.asDouble
+                return@DoubleSupplier dpadX * slowdownMultiplier!!.asDouble
             } else {
-                return@DoubleSupplier driverController.leftX * slowdownMultiplier.asDouble
+                return@DoubleSupplier driverController!!.leftX * slowdownMultiplier!!.asDouble
             }
         }
     }
-
 }

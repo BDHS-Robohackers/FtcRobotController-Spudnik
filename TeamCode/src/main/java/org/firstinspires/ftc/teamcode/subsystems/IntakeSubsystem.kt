@@ -1,49 +1,58 @@
 package org.firstinspires.ftc.teamcode.subsystems
 
+import com.acmerobotics.dashboard.config.Config
 import com.arcrobotics.ftclib.command.SubsystemBase
-import com.arcrobotics.ftclib.hardware.ServoEx
+import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
-import org.firstinspires.ftc.teamcode.util.FTCDashboardPackets
+import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer
 
-class IntakeSubsystem(var powerMotor: DcMotorEx, var tilterServo: ServoEx) : SubsystemBase() {
-    private var currentState: Boolean = false
+@Config
+class IntakeSubsystem(hardwareMap: HardwareMap) : SubsystemBase() {
+    var powerMotor: DcMotorEx =
+        RobotHardwareInitializer.MotorComponent.INTAKE_MOTOR.getEx(hardwareMap)
+
+    //ServoEx tilterServo;
+    var tilterServo: CRServo = RobotHardwareInitializer.CRServoComponent.INTAKE_TILTER[hardwareMap]
+    val TILTER_POWER_SCALE: Double = .5
+    var intakeState: Boolean = false
+    val MAX_POWER: Double = 0.8
 
     init {
-        tilterServo.setRange(0.0, 45.0)
-        setIntakeDirection(DcMotorSimple.Direction.FORWARD)
+        tilterServo.direction = DcMotorSimple.Direction.FORWARD
+        //this.tilterServo = RobotHardwareInitializer.ServoComponent.INTAKE_TILTER.getEx(hardwareMap);
+        //this.tilterServo.setInverted(true);
+        //tilterServo.setRange(0, 35);
     }
 
     fun tiltIntake() {
-        tilterServo.position = 1.0
-        dbp.info("Tilting Intake (Down)")
-        dbp.send(true)
+        //tilterServo.setPosition(.7f);
     }
 
     fun untiltIntake() {
-        tilterServo.position = 0.0
-        dbp.info("Untilting Intake (Up)")
-        dbp.send(true)
+        //tilterServo.setPosition(0.4f);
     }
 
-    private fun setIntakeState(activated: Boolean) {
-        powerMotor.power = (if (activated) INTAKE_SPEED else .05f).toDouble()
-        currentState = activated
-        dbp.info("Setting Intake Activation State: $activated")
-        dbp.send(true)
+    fun moveTiltIntake(power: Double) {
+        tilterServo.power = power * TILTER_POWER_SCALE
     }
 
-    private fun setIntakeDirection(direction: DcMotorSimple.Direction) {
-        powerMotor.direction = direction
+    fun setIntakeState(activated: Boolean, reversed: Boolean) {
+        if (!reversed) powerMotor.power = if (activated) MAX_POWER else 0.0
+        else powerMotor.power = if (activated) -MAX_POWER else 0.0
+        intakeState = activated
     }
 
     fun toggleIntakeState() {
-        setIntakeState(!currentState)
+        setIntakeState(!intakeState, false)
+    }
+
+    fun reverseIntake() {
+        setIntakeState(!intakeState, true)
     }
 
     companion object {
-        const val INTAKE_SPEED: Float = .95f
-
-        private val dbp = FTCDashboardPackets("IntakeSubsystem")
+        var INTAKE_POSITION_PADDING: Double = 0.0 // "padding" from the max position of the servo
     }
 }

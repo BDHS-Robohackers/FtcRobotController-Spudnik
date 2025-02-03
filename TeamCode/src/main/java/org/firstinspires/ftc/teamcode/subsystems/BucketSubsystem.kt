@@ -4,7 +4,7 @@ import com.arcrobotics.ftclib.command.SubsystemBase
 import com.arcrobotics.ftclib.hardware.ServoEx
 
 @Deprecated("")
-class BucketSubsystem(private val servo: ServoEx) : SubsystemBase() {
+class BucketSubsystem(val servo: ServoEx) : SubsystemBase() {
     init {
         servo.setRange(0.0, MAX_POSITION.toDouble())
     }

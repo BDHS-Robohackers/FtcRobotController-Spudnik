@@ -4,16 +4,16 @@ import android.annotation.SuppressLint
 import com.arcrobotics.ftclib.command.SubsystemBase
 import com.arcrobotics.ftclib.hardware.ServoEx
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import org.firstinspires.ftc.teamcode.util.FTCDashboardPackets
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets
 import org.firstinspires.ftc.teamcode.util.MatchRecorder.MatchLogger
 import java.util.Objects
 
 @Deprecated("")
-class PincherSubsystem(private var finger1: ServoEx, private var finger2: ServoEx) : SubsystemBase() {
+class PincherSubsystem(var finger1: ServoEx, var finger2: ServoEx) : SubsystemBase() {
     private val dbp = FTCDashboardPackets("FingerSubsystem")
 
     enum class FingerPositions(val angle: Float, val angleUnit: AngleUnit) {
-        ZERO(0f, AngleUnit.DEGREES),
+        ZERO(0, AngleUnit.DEGREES),
         OPEN(MAX_ANGLE / 2f, AngleUnit.DEGREES),
         CLOSED(MAX_ANGLE, AngleUnit.DEGREES)
     }
@@ -43,13 +43,19 @@ class PincherSubsystem(private var finger1: ServoEx, private var finger2: ServoE
 
         //finger1.setPosition(1f-angleScale);
         //finger2.setPosition(angleScale);
-        finger1.turnToAngle(((MAX_ANGLE - position.angle) / 3f).toDouble(), position.angleUnit)
+        finger1.turnToAngle(
+            ((MAX_ANGLE - position.angle) / 3f).toDouble(),
+            position.angleUnit
+        )
         finger2.turnToAngle(((position.angle) / 3f).toDouble(), position.angleUnit)
         //dbp.info("ANGLE: "+angleScale);
         //dbp.info("POSITION: "+finger1.getPosition()+ ", "+finger2.getPosition());
         //dbp.info("OBJECT: "+finger1+ ", "+finger2);
         var debug = "Angle: %f\nTargetPos: %f\nPosition: %f\nPositionName: %s"
-        debug = String.format(debug, position.angle, angleScale, finger1.position, position.name)
+        debug = String.format(
+            debug,
+            position.angle, angleScale, finger1.position, position.name
+        )
         dbp.info(debug)
         dbp.send(true)
 
@@ -74,7 +80,8 @@ class PincherSubsystem(private var finger1: ServoEx, private var finger2: ServoE
             if (currentFingerPosition == null) {
                 return false
             }
-            val angleScale = (currentFingerPosition!!.angle / MAX_ANGLE).toDouble()
+            val angleScale =
+                (currentFingerPosition!!.angle / MAX_ANGLE).toDouble()
             return ((finger1.angle == 1f - angleScale) && (finger2.angle == angleScale))
         }
 

@@ -14,8 +14,8 @@ import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer
 @Autonomous(name = "Simple Park (WIP)", group = "Autonomous")
 class MoveAutonomous : CommandOpMode() {
     var driveSubsystem: DriveSubsystem? = null
-    private var pincherSubsystem: PincherSubsystem? = null
-    private var driveCommand: DefaultDrive? = null
+    var pincherSubsystem: PincherSubsystem? = null
+    var driveCommand: DefaultDrive? = null
 
     override fun initialize() {
         try {

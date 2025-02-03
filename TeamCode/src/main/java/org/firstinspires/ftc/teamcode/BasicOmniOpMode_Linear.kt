@@ -32,7 +32,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
-import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlin.math.abs
 import kotlin.math.max
@@ -68,10 +67,10 @@ import kotlin.math.max
 class BasicOmniOpMode_Linear : LinearOpMode() {
     // Declare OpMode members for each of the 4 motors.
     private val runtime = ElapsedTime()
-    private lateinit var leftFrontDrive: DcMotor
-    private lateinit var leftBackDrive: DcMotor
-    private lateinit var rightFrontDrive: DcMotor
-    private lateinit var rightBackDrive: DcMotor
+    private var leftFrontDrive: DcMotor? = null
+    private var leftBackDrive: DcMotor? = null
+    private var rightFrontDrive: DcMotor? = null
+    private var rightBackDrive: DcMotor? = null
 
     override fun runOpMode() {
         // Initialize the hardware variables. Note that the strings used here must correspond
@@ -92,10 +91,10 @@ class BasicOmniOpMode_Linear : LinearOpMode() {
         // when you first test your robot, push the left joystick forward and observe the direction the wheels turn.
         // Reverse the direction (flip FORWARD <-> REVERSE ) of any wheel that runs backward
         // Keep testing until ALL the wheels move the robot forward when you push the left joystick forward.
-        leftFrontDrive.direction = DcMotorSimple.Direction.REVERSE
-        leftBackDrive.direction = DcMotorSimple.Direction.REVERSE
-        rightFrontDrive.direction = DcMotorSimple.Direction.FORWARD
-        rightBackDrive.direction = DcMotorSimple.Direction.FORWARD
+        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE)
+        leftBackDrive.setDirection(DcMotor.Direction.REVERSE)
+        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD)
+        rightBackDrive.setDirection(DcMotor.Direction.FORWARD)
 
         // Wait for the game to start (driver presses PLAY)
         telemetry.addData("Status", "Initialized")
@@ -149,10 +148,10 @@ class BasicOmniOpMode_Linear : LinearOpMode() {
             rightBackPower = if (gamepad1.b) 1.0 else 0.0 // B gamepad
 
             // Send calculated power to wheels
-            leftFrontDrive.power = leftFrontPower
-            rightFrontDrive.power = rightFrontPower
-            leftBackDrive.power = leftBackPower
-            rightBackDrive.power = rightBackPower
+            leftFrontDrive.setPower(leftFrontPower)
+            rightFrontDrive.setPower(rightFrontPower)
+            leftBackDrive.setPower(leftBackPower)
+            rightBackDrive.setPower(rightBackPower)
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: $runtime")

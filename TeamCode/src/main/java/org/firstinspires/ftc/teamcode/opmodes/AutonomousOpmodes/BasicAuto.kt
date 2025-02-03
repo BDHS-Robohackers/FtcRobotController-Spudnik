@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.MecanumDrive
 @Config
 @Autonomous(name = "Basic_Auto", group = "Autonomous")
 class BasicAuto : LinearOpMode() {
-    private var visionOutputPosition: Int = 0
+    var visionOutputPosition: Int = 0
 
     override fun runOpMode() {
         val initialPose = Pose2d(7.00, -70.00, Math.toRadians(90.00))

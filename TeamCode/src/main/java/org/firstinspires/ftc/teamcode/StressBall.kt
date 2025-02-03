@@ -18,19 +18,19 @@ class StressBall : OpMode() {
 
     private val PULSE_PER_REVOLUTION_NEVEREST40_OVER_40 = 280
 
-    private lateinit var frontLeft: DcMotor
-    private lateinit var frontRight: DcMotor
-    private lateinit var backLeft: DcMotor
-    private lateinit var backRight: DcMotor
+    private var frontLeft: DcMotor? = null
+    private var frontRight: DcMotor? = null
+    private var backLeft: DcMotor? = null
+    private var backRight: DcMotor? = null
 
     //
     private val FeedMotor: CRServo? = null
 
     private val TurnServo: Servo? = null
 
-    private lateinit var ContinuousShooter: CRServo
+    private var ContinuousShooter: CRServo? = null
 
-    private lateinit var SmallContinuous: CRServo
+    private var SmallContinuous: CRServo? = null
 
     var SERVO_LATCH_UP: Float = 1.0.toFloat()
     var SERVO_STOP: Float = 0f
@@ -52,15 +52,15 @@ class StressBall : OpMode() {
         ContinuousShooter = hardwareMap.crservo["ContinuousShooter"]
         SmallContinuous = hardwareMap.crservo["SmallContinuous"]
 
-        frontLeft.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        frontRight.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        backLeft.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        backRight.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER)
+        frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER)
+        backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER)
+        backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER)
 
-        backLeft.direction = DcMotorSimple.Direction.FORWARD
-        frontLeft.direction = DcMotorSimple.Direction.FORWARD
-        frontRight.direction = DcMotorSimple.Direction.REVERSE
-        backRight.direction = DcMotorSimple.Direction.REVERSE
+        backLeft.setDirection(DcMotorSimple.Direction.FORWARD)
+        frontLeft.setDirection(DcMotorSimple.Direction.FORWARD)
+        frontRight.setDirection(DcMotorSimple.Direction.REVERSE)
+        backRight.setDirection(DcMotorSimple.Direction.REVERSE)
 
         //        FeedMotor.setDirection(FORWARD);
         telemetry.update()
@@ -83,28 +83,28 @@ class StressBall : OpMode() {
         if (Magnitude < 1) {
             Magnitude = 1f
         }
-        frontLeft.power = Range.scale(
+        frontLeft!!.power = Range.scale(
             (speed + direction - strafe).toDouble(),
             -Magnitude.toDouble(),
             Magnitude.toDouble(),
             -1.0,
             1.0
         )
-        frontRight.power = Range.scale(
+        frontRight!!.power = Range.scale(
             (speed - direction + strafe).toDouble(),
             -Magnitude.toDouble(),
             Magnitude.toDouble(),
             -1.0,
             1.0
         )
-        backLeft.power = Range.scale(
+        backLeft!!.power = Range.scale(
             (speed + direction + strafe).toDouble(),
             -Magnitude.toDouble(),
             Magnitude.toDouble(),
             -1.0,
             1.0
         )
-        backRight.power = Range.scale(
+        backRight!!.power = Range.scale(
             (speed - direction - strafe).toDouble(),
             -Magnitude.toDouble(),
             Magnitude.toDouble(),
@@ -132,23 +132,23 @@ class StressBall : OpMode() {
 
         //ContinuosBigOl'Servo
         if (gamepad1.a) {
-            ContinuousShooter.power = 1.0
+            ContinuousShooter!!.power = 1.0
         } else if (gamepad1.b) {
-            ContinuousShooter.power = 0.0
+            ContinuousShooter!!.power = 0.0
         }
 
         //ContinuosBabyDuboisServo
         if (gamepad1.dpad_up) {
-            SmallContinuous.power = -1.0
+            SmallContinuous!!.power = -1.0
         } else if (gamepad1.dpad_down) {
-            SmallContinuous.power = 1.0
+            SmallContinuous!!.power = 1.0
         } else {
-            SmallContinuous.power = 0.0
+            SmallContinuous!!.power = 0.0
         }
     }
 
     override fun stop() {
         super.stop()
-        ContinuousShooter.power = 0.0
+        ContinuousShooter!!.power = 0.0
     }
 }

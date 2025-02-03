@@ -10,24 +10,26 @@ import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.teamcode.MecanumDrive
-import org.firstinspires.ftc.teamcode.util.FTCDashboardPackets
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets
 import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer
-import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer.MIN_POWER
 import kotlin.math.abs
 import kotlin.math.max
 
 class DriveSubsystem : SubsystemBase {
-    private lateinit var lF: DcMotor
-    private lateinit var rF: DcMotor
-    private lateinit var lB: DcMotor
-    private lateinit var rB: DcMotor
+    private var lF: DcMotor? = null
+    private var rF: DcMotor? = null
+    private var lB: DcMotor? = null
+    private var rB: DcMotor? = null
+    private var eL: DcMotor? = null
+    private var eB: DcMotor? = null
+    private var eR: DcMotor? = null
     private val INCHES_PER_TICK = 0.0018912
     var elapsedTime: ElapsedTime? = null
     private val dbp = FTCDashboardPackets("DriveSubsystem")
     var drive: MecanumDrive? = null
 
     @Deprecated("")
-    constructor(driveMotors: HashMap<RobotHardwareInitializer.Component<*>, DcMotor>) : this(
+    constructor(driveMotors: HashMap<RobotHardwareInitializer.Component<*>?, DcMotor?>) : this(
         driveMotors[RobotHardwareInitializer.MotorComponent.LEFT_FRONT],
         driveMotors[RobotHardwareInitializer.MotorComponent.RIGHT_FRONT],
         driveMotors[RobotHardwareInitializer.MotorComponent.LEFT_BACK],
@@ -48,21 +50,17 @@ class DriveSubsystem : SubsystemBase {
         encoderRight: DcMotor?
     ) {
         dbp.createNewTelePacket()
-        dbp.info("$leftFront, $leftBack, $rightFront, $rightBack")
+        dbp.info(leftFront.toString() + ", " + leftBack + ", " + rightFront + ", " + rightBack)
         dbp.send(false)
 
-        if (leftFront != null) {
-            lF = leftFront
-        }
-        if (rightFront != null) {
-            rF = rightFront
-        }
-        if (leftBack != null) {
-            lB = leftBack
-        }
-        if (rightBack != null) {
-            rB = rightBack
-        }
+        lF = leftFront
+        rF = rightFront
+        lB = leftBack
+        rB = rightBack
+
+        eL = encoderLeft
+        eB = encoderBack
+        eR = encoderRight
 
         elapsedTime = ElapsedTime(ElapsedTime.Resolution.MILLISECONDS)
     }
@@ -130,7 +128,7 @@ class DriveSubsystem : SubsystemBase {
         drive!!.setDrivePowers(
             PoseVelocity2d(
                 Vector2d(
-                    gamepad1.left_stick_y.toDouble(),
+                    -gamepad1.left_stick_y.toDouble(),
                     -(gamepad1.right_trigger - gamepad1.left_trigger).toDouble()
                 ),
                 -gamepad1.right_stick_x.toDouble()
@@ -158,9 +156,18 @@ class DriveSubsystem : SubsystemBase {
 
         // Axial = y, Lateral = x, yaw = z
         val startingPosition = DoubleArray(3)
+        startingPosition[0] = eL!!.currentPosition * INCHES_PER_TICK
+        startingPosition[1] = eB!!.currentPosition * INCHES_PER_TICK
+        startingPosition[2] = eR!!.currentPosition * INCHES_PER_TICK
 
         while (lF!!.isBusy) {
             val newPositions = DoubleArray(3)
+            newPositions[0] =
+                ((eL!!.currentPosition * INCHES_PER_TICK) * DIRECTION) - startingPosition[0]
+            newPositions[1] =
+                ((eB!!.currentPosition * INCHES_PER_TICK) * DIRECTION) - startingPosition[1]
+            newPositions[2] =
+                ((eR!!.currentPosition * INCHES_PER_TICK) * DIRECTION) - startingPosition[2]
 
             if ((newPositions[0] + newPositions[1] + newPositions[2]) >= distance) {
                 resetDriveMotors()
@@ -171,10 +178,10 @@ class DriveSubsystem : SubsystemBase {
 
     fun resetDriveMotors() {
         dbp.debug("Resetting Drive Motors...")
-        lF!!.power = MIN_POWER.toDouble()
-        rF!!.power = MIN_POWER.toDouble()
-        lB!!.power = MIN_POWER.toDouble()
-        rB!!.power = MIN_POWER.toDouble()
+        lF!!.power = RobotHardwareInitializer.MIN_POWER.toDouble()
+        rF!!.power = RobotHardwareInitializer.MIN_POWER.toDouble()
+        lB!!.power = RobotHardwareInitializer.MIN_POWER.toDouble()
+        rB!!.power = RobotHardwareInitializer.MIN_POWER.toDouble()
     }
 
     override fun periodic() {

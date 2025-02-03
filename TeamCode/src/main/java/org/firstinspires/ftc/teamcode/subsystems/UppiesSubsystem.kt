@@ -5,13 +5,13 @@ import com.arcrobotics.ftclib.command.SubsystemBase
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import org.firstinspires.ftc.teamcode.util.FTCDashboardPackets
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets
 
 @Deprecated("")
 @Config
-class UppiesSubsystem(private var uppiesMotor: DcMotorEx) : SubsystemBase() {
+class UppiesSubsystem(var uppiesMotor: DcMotorEx) : SubsystemBase() {
     private var state: UppiesState
-    private var lastStateChange: Long = 0
+    var lastStateChange: Long = 0
 
     init {
         this.state = UppiesState.IDLE
@@ -24,7 +24,7 @@ class UppiesSubsystem(private var uppiesMotor: DcMotorEx) : SubsystemBase() {
         dbp.info("Updating state to: $state")
         val lastState = this.state
         this.state = state
-        //TODO: Verify that this is the correct direction
+        // TODO: Verify that this is the correct direction
         uppiesMotor.power =
             (if (state == UppiesState.UN_UPPIES) speedMultiplier else -speedMultiplier).toDouble()
         if (state == UppiesState.IDLE) {

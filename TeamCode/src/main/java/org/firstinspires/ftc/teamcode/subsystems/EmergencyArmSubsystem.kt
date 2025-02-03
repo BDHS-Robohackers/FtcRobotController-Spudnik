@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import org.firstinspires.ftc.teamcode.util.FTCDashboardPackets
+import org.firstinspires.ftc.teamcode.util.LoggingUtils.FTCDashboardPackets
 import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer
 import java.util.Objects
 import kotlin.math.abs
@@ -17,9 +17,10 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Config
-class EmergencyArmSubsystem(map: HardwareMap?, var telemetry: Telemetry) : SubsystemBase() {
-    var armMotorLower: DcMotorEx = RobotHardwareInitializer.MotorComponent.LOWER_ARM.getEx(map!!)
-    var armMotorHigher: DcMotorEx = RobotHardwareInitializer.MotorComponent.HIGHER_ARM.getEx(map!!)
+@Deprecated("")
+class EmergencyArmSubsystem(map: HardwareMap, var telemetry: Telemetry) : SubsystemBase() {
+    var armMotorLower: DcMotorEx = RobotHardwareInitializer.MotorComponent.LOWER_ARM.getEx(map)
+    var armMotorHigher: DcMotorEx = RobotHardwareInitializer.MotorComponent.HIGHER_ARM.getEx(map)
     var pinchServo: ServoEx? = null
     var wristServo: CRServo? = null
 
@@ -71,7 +72,7 @@ class EmergencyArmSubsystem(map: HardwareMap?, var telemetry: Telemetry) : Subsy
     init {
         if (KEEP_PINCHER) {
             pinchServo = RobotHardwareInitializer.ServoComponent.PINCHER.getEx(map)
-            wristServo = RobotHardwareInitializer.CRServoComponent.WRIST.get(map!!)
+            wristServo = RobotHardwareInitializer.CRServoComponent.WRIST[map]
         }
 
         armMotorLower.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
@@ -147,8 +148,8 @@ class EmergencyArmSubsystem(map: HardwareMap?, var telemetry: Telemetry) : Subsy
     }
 
     enum class PinchState(val pinchPosition: Double) {
-        PINCHED(0.0),  // left state
-        OPEN(0.5),
+        PINCHED(0),  // left state
+        OPEN(0.5f),
         // middle state
     }
 
@@ -251,9 +252,9 @@ class EmergencyArmSubsystem(map: HardwareMap?, var telemetry: Telemetry) : Subsy
         //dbp.info("Current position: "+armMotorLower.getCurrentPosition()+", "+armMotorLower.getTargetPosition()+"\n"+armMotorHigher.getCurrentPosition()+", "+armMotorHigher.getTargetPosition());
         dbp.info(
             """
-    Lower angle: ${angleLower}
-    Right angle: ${angleHigher}
-    """.trimIndent()
+                Lower angle: ${angleLower}
+                Right angle: ${angleHigher}
+                """.trimIndent()
         )
         dbp.send(true)
         telemetry.addData(

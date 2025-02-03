@@ -8,24 +8,24 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.util.RobotHardwareInitializer.DistanceSensorComponent
 import kotlin.math.abs
 
-class AutoUtilitySubsystem(hardwareMap: HardwareMap?) : SubsystemBase() {
-    val LEFT: DistanceSensor = DistanceSensorComponent.LEFT_SENSOR.get(hardwareMap!!)
-    val CENTER: DistanceSensor = DistanceSensorComponent.CENTER_SENSOR.get(hardwareMap!!)
-    val RIGHT: DistanceSensor = DistanceSensorComponent.RIGHT_SENSOR.get(hardwareMap!!)
+class AutoUtilitySubsystem(hardwareMap: HardwareMap) : SubsystemBase() {
+    val LEFT: DistanceSensor = DistanceSensorComponent.LEFT_SENSOR[hardwareMap]
+    val CENTER: DistanceSensor = DistanceSensorComponent.CENTER_SENSOR[hardwareMap]
+    val RIGHT: DistanceSensor = DistanceSensorComponent.RIGHT_SENSOR[hardwareMap]
     val TARGET: Double = 1.0
     val UNIT: DistanceUnit = DistanceUnit.CM
 
 
-    private var error: Double = 0.0
+    var error: Double = 0.0
     var distance: Double = 0.0
 
     private var DL = 0.0
     private var DR = 0.0
     private var DC = 0.0
 
-    private lateinit var robotPose: Pose2d
+    var robotPose: Pose2d? = null
 
-    fun setRobotPose(pose: Pose2d) {
+    fun setRobotPose(pose: Pose2d?) {
         robotPose = pose
     }
 

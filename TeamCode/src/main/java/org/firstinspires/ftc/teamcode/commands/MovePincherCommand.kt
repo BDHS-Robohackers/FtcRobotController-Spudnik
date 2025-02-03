@@ -7,7 +7,7 @@ import org.firstinspires.ftc.teamcode.subsystems.PincherSubsystem.FingerPosition
 @Deprecated("")
 class MovePincherCommand(var subsystem: PincherSubsystem, var position: FingerPositions) :
     CommandBase() {
-    private var ran: Boolean = false
+    var ran: Boolean = false
 
     init {
         addRequirements(subsystem)

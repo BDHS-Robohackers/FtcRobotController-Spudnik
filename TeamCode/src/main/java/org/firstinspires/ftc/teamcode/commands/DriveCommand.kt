@@ -10,13 +10,13 @@ class DriveCommand(
     private val forwardBackward = 0.0
     private val leftRight = 0.0
     private val rotation = 0.0
-    private val mDrive: DriveSubsystem
+    private val m_drive: DriveSubsystem
 
     init {
         var forwardBackward = forwardBackward
         var leftRight = leftRight
         var rotation = rotation
-        mDrive = subsystem
+        m_drive = subsystem
         forwardBackward = forwardBackward
         leftRight = leftRight
         rotation = rotation
@@ -24,7 +24,7 @@ class DriveCommand(
     }
 
     override fun execute() {
-        mDrive.moveRobotMecanum(forwardBackward, leftRight, rotation)
+        m_drive.moveRobotMecanum(forwardBackward, leftRight, rotation)
     }
 
     override fun isFinished(): Boolean {

@@ -6,7 +6,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.MecanumDrive
 import org.firstinspires.ftc.teamcode.util.MatchRecorder.MatchLogger
 
-class MatchLoggerSubsystem(hardwareMap: HardwareMap?, POSE_ESTIMATE: Pose2d?) : SubsystemBase() {
+class MatchLoggerSubsystem(hardwareMap: HardwareMap?, POSE_ESTIMATE: Pose2d?) :
+    SubsystemBase() {
     var mecanumDrive: MecanumDrive =
         MecanumDrive(hardwareMap, POSE_ESTIMATE)
     val MATCH_LOGGER: MatchLogger = MatchLogger.getInstance()
